@@ -102,12 +102,9 @@ supabase.auth.onAuthStateChange((event, session) => {
 
 // Función para actualizar la UI (Navbar y Chat)
 function updateUI(session) {
-    // Elementos del Navbar
     const loginBtn = document.getElementById('nav-login-btn');
     const userProfile = document.getElementById('nav-user-profile');
     const userEmailDisplay = document.getElementById('user-email-display');
-
-    // Elementos del Chat
     const chatLock = document.getElementById('chat-lock');
     const chatContent = document.getElementById('chat-content');
 
@@ -115,23 +112,35 @@ function updateUI(session) {
         // --- USUARIO LOGUEADO ---
         loginBtn.classList.add('d-none');
         userProfile.classList.remove('d-none');
-        userEmailDisplay.textContent = session.user.email.split('@')[0];
-
+        
+        // Ponemos estado de carga inicial
+        userEmailDisplay.textContent = "Cargando..."; 
+        
         // Chat
         chatLock.classList.add('d-none');
         chatContent.classList.remove('d-none');
 
-        userEmailDisplay.textContent = "Cargando..."; 
-        getProfile(session);
+        // Cargar datos reales
+        getProfile(session); 
 
     } else {
-        // --- USUARIO NO LOGUEADO ---
+        // --- USUARIO NO LOGUEADO (LOGOUT) ---
         loginBtn.classList.remove('d-none');
         userProfile.classList.add('d-none');
 
         // Chat
         chatLock.classList.remove('d-none');
         chatContent.classList.add('d-none');
+
+        // --- LIMPIEZA IMPORTANTE (NUEVO) ---
+        // 1. Resetear nombre
+        userEmailDisplay.textContent = "Usuario";
+        
+        // 2. Resetear foto: Si hay una imagen, la quitamos y volvemos a poner el icono original
+        const navImg = document.querySelector('.nav-avatar');
+        if (navImg) {
+            navImg.outerHTML = '<i class="fas fa-user-circle"></i>';
+        }
     }
 }
 
@@ -292,24 +301,31 @@ async function getProfile(session) {
         .eq('id', user.id)
         .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 es "no encontrado", que es normal si es nuevo
-        console.warn('Error cargando perfil:', error);
-    }
-
+    // Si hay datos (el usuario ya editó su perfil alguna vez o se creó automático)
     if (data) {
-        // Rellenar formulario del modal
+        // Actualizar nombre en navbar
+        userEmailDisplay = document.getElementById('user-email-display');
+        userEmailDisplay.textContent = data.username || user.email.split('@')[0];
+
+        // Rellenar modal
         document.getElementById('profileUsername').value = data.username || '';
         document.getElementById('profileWebsite').value = data.website || '';
         
-        // Actualizar UI del Navbar con datos reales
-        if(data.username) {
-            document.getElementById('user-email-display').textContent = data.username;
-        }
-        
-        // Si hay avatar, mostrarlo
+        // Gestionar Avatar
         if (data.avatar_url) {
             downloadImage(data.avatar_url);
+        } else {
+            // Si el usuario NO tiene avatar, nos aseguramos de que se vea el icono por defecto
+            // (por si acaso hubiera quedado una imagen residual de otro usuario)
+            const navImg = document.querySelector('.nav-avatar');
+            if (navImg) {
+                navImg.outerHTML = '<i class="fas fa-user-circle"></i>';
+            }
         }
+    } else {
+        // CASO NUEVO: El usuario no tiene perfil todavía en la BD
+        // Quitamos el "Cargando..." y mostramos su email
+        document.getElementById('user-email-display').textContent = user.email.split('@')[0];
     }
 }
 
@@ -423,3 +439,135 @@ document.getElementById('avatarFile').addEventListener('change', (event) => {
         document.getElementById('avatarPreview').src = src;
     }
 });
+
+
+// ---------------------------------------------------------
+// 6. LÓGICA DEL CHAT EN TIEMPO REAL
+// ---------------------------------------------------------
+
+const chatContainer = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendChatBtn');
+
+// URL base para imágenes públicas (para no gastar cuota firmando URLs en cada mensaje)
+// OJO: Asegúrate de que tu bucket 'avatars' sea PÚBLICO en Supabase Storage
+const STORAGE_URL = `${SUPABASE_URL}/storage/v1/object/public/avatars/`;
+
+// A. Función para renderizar un mensaje en HTML
+function renderMessage(msg) {
+    // Datos del usuario (gracias al join con profiles)
+    const profile = msg.profiles || {};
+    const username = profile.username || 'Usuario Anónimo';
+    
+    // Si tiene avatar, construimos la URL, si no, ponemos uno por defecto
+    let avatarImg = '<i class="fas fa-user-circle fa-lg me-2"></i>'; // Icono por defecto
+    if (profile.avatar_url) {
+        avatarImg = `<img src="${STORAGE_URL}${profile.avatar_url}" class="chat-avatar" alt="User">`;
+    }
+
+    // Formatear hora (Solo HH:MM)
+    const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // HTML del mensaje
+    const html = `
+        <div class="forum-msg">
+            <div class="d-flex align-items-center mb-1">
+                ${avatarImg}
+                <span class="chat-username">${username}</span>
+                <small class="chat-time">${time}</small>
+            </div>
+            <div>${msg.content}</div>
+        </div>
+    `;
+
+    chatContainer.insertAdjacentHTML('beforeend', html);
+    
+    // Auto-scroll hacia abajo
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// B. Cargar mensajes iniciales
+async function loadChat() {
+    chatContainer.innerHTML = '<div class="text-center text-muted mt-5"><i class="fas fa-spinner fa-spin"></i> Cargando chat...</div>';
+
+    const { data, error } = await supabase
+        .from('messages')
+        .select(`
+            id, 
+            content, 
+            created_at, 
+            user_id,
+            profiles ( username, avatar_url )
+        `)
+        .order('created_at', { ascending: true }) // Los más viejos arriba
+        .limit(50); // Últimos 50 mensajes
+
+    chatContainer.innerHTML = ''; // Limpiar loader
+
+    if (error) {
+        chatContainer.innerHTML = '<p class="text-danger text-center">Error cargando chat</p>';
+        console.error(error);
+        return;
+    }
+
+    data.forEach(msg => renderMessage(msg));
+}
+
+// C. Suscribirse a nuevos mensajes (REALTIME)
+const chatChannel = supabase.channel('public:messages')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
+        // Cuando llega un mensaje nuevo, solo tenemos el ID del usuario, no su nombre/foto.
+        // Tenemos que pedir los datos del perfil rápidamente.
+        const { data: profileData } = await supabase
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', payload.new.user_id)
+            .single();
+
+        // Combinamos los datos del mensaje nuevo con los datos del perfil
+        const fullMessage = {
+            ...payload.new,
+            profiles: profileData
+        };
+
+        renderMessage(fullMessage);
+    })
+    .subscribe();
+
+
+// D. Enviar mensaje
+async function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    // Obtener usuario actual
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+        alert("Debes iniciar sesión para escribir.");
+        return;
+    }
+
+    // Limpiar input inmediatamente para buena UX
+    chatInput.value = '';
+
+    const { error } = await supabase
+        .from('messages')
+        .insert({
+            content: text,
+            user_id: user.id
+        });
+
+    if (error) {
+        alert("Error enviando: " + error.message);
+    }
+}
+
+// Event Listeners para enviar
+sendBtn.addEventListener('click', sendMessage);
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});
+
+// Inicializar chat
+loadChat();

@@ -146,3 +146,26 @@ body {
     border: 2px solid var(--accent);
     margin-right: 5px;
 }
+
+
+.chat-avatar {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+    object-fit: cover;
+    border: 1px solid var(--accent);
+}
+
+.chat-username {
+    font-weight: bold;
+    color: var(--accent);
+    margin-right: 5px;
+}
+
+.chat-time {
+    font-size: 0.7rem;
+    color: #888;
+    float: right;
+}
