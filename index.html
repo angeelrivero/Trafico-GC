@@ -35,7 +35,7 @@
                             <i class="fas fa-user-circle"></i> <span id="user-email-display">Usuario</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
-                            <li><a class="dropdown-item" href="#">Mis Alertas</a></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">Editar Perfil</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Cerrar Sesión</a></li>
                         </ul>
@@ -153,6 +153,44 @@
                     <div class="text-center">
                         <small>¿Ya tienes cuenta? <a href="#" class="text-info" data-bs-toggle="modal" data-bs-target="#loginModal">Inicia Sesión</a></small>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Editar Perfil</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="profileForm">
+                        <div class="text-center mb-3">
+                            <img id="avatarPreview" src="https://via.placeholder.com/150" class="profile-preview mb-2" alt="Avatar">
+                            <br>
+                            <label class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-camera"></i> Cambiar Foto
+                                <input type="file" id="avatarFile" accept="image/*" hidden>
+                            </label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre de Usuario</label>
+                            <input type="text" id="profileUsername" class="form-control" placeholder="Ej: Javi_GC" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Sitio Web (Opcional)</label>
+                            <input type="text" id="profileWebsite" class="form-control" placeholder="https://...">
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100" id="saveProfileBtn">
+                            <span id="saveSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                            Guardar Cambios
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

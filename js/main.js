@@ -121,6 +121,9 @@ function updateUI(session) {
         chatLock.classList.add('d-none');
         chatContent.classList.remove('d-none');
 
+        userEmailDisplay.textContent = "Cargando..."; 
+        getProfile(session);
+
     } else {
         // --- USUARIO NO LOGUEADO ---
         loginBtn.classList.remove('d-none');
@@ -270,3 +273,153 @@ window.initMap = function() {
         });
     });
 }
+
+
+
+// ---------------------------------------------------------
+// 5. GESTIÓN DE PERFIL (NUEVO)
+// ---------------------------------------------------------
+
+// Función para cargar datos del perfil (se llama al hacer login)
+async function getProfile(session) {
+    if (!session) return;
+    const { user } = session;
+
+    // Buscamos en la tabla 'profiles'
+    const { data, error } = await supabase
+        .from('profiles')
+        .select(`username, website, avatar_url`)
+        .eq('id', user.id)
+        .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 es "no encontrado", que es normal si es nuevo
+        console.warn('Error cargando perfil:', error);
+    }
+
+    if (data) {
+        // Rellenar formulario del modal
+        document.getElementById('profileUsername').value = data.username || '';
+        document.getElementById('profileWebsite').value = data.website || '';
+        
+        // Actualizar UI del Navbar con datos reales
+        if(data.username) {
+            document.getElementById('user-email-display').textContent = data.username;
+        }
+        
+        // Si hay avatar, mostrarlo
+        if (data.avatar_url) {
+            downloadImage(data.avatar_url);
+        }
+    }
+}
+
+// Helper para descargar/mostrar la imagen
+async function downloadImage(path) {
+    try {
+        const { data, error } = await supabase.storage.from('avatars').download(path);
+        if (error) throw error;
+        
+        const url = URL.createObjectURL(data);
+        document.getElementById('avatarPreview').src = url; // En el modal
+        
+        // Actualizar icono del navbar (truco visual)
+        // Buscamos el icono de usuario y lo reemplazamos por la imagen o le ponemos la imagen al lado
+        const navIcon = document.querySelector('#nav-user-profile i.fa-user-circle');
+        if(navIcon) {
+            // Creamos imagen si no existe
+            const imgHTML = `<img src="${url}" class="nav-avatar">`;
+            const spanName = document.getElementById('user-email-display');
+            // Reemplazamos el icono por la imagen
+            navIcon.outerHTML = imgHTML;
+        } else {
+            // Si ya hay imagen, actualizamos src
+            const navImg = document.querySelector('.nav-avatar');
+            if(navImg) navImg.src = url;
+        }
+
+    } catch (error) {
+        console.log('Error descargando imagen: ', error.message);
+    }
+}
+
+// Listener para guardar el formulario de perfil
+document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const saveBtn = document.getElementById('saveProfileBtn');
+    const spinner = document.getElementById('saveSpinner');
+    
+    // UI Loading
+    saveBtn.disabled = true;
+    spinner.classList.remove('d-none');
+
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if(!user) throw new Error("No hay usuario logueado");
+
+        const username = document.getElementById('profileUsername').value;
+        const website = document.getElementById('profileWebsite').value;
+        const avatarFile = document.getElementById('avatarFile').files[0];
+        
+        let avatar_url = null;
+
+        // 1. Si hay archivo seleccionado, lo subimos
+        if (avatarFile) {
+            const fileExt = avatarFile.name.split('.').pop();
+            const fileName = `${user.id}/${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            // Subir a Storage
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, avatarFile, { upsert: true });
+
+            if (uploadError) throw uploadError;
+            avatar_url = filePath;
+        }
+
+        // 2. Preparar objeto de actualización
+        const updates = {
+            id: user.id,
+            username,
+            website,
+            updated_at: new Date(),
+        };
+
+        // Si subimos foto nueva, actualizamos el campo, si no, no lo tocamos
+        // Para no borrar la foto vieja si el usuario solo cambió el nombre
+        if (avatar_url) {
+            updates.avatar_url = avatar_url;
+        }
+
+        // 3. Guardar en Base de Datos (Upsert = Update o Insert)
+        let { error } = await supabase.from('profiles').upsert(updates);
+
+        if (error) throw error;
+
+        alert('¡Perfil actualizado!');
+        
+        // Recargar datos en la vista
+        const { data: { session } } = await supabase.auth.getSession();
+        getProfile(session);
+        
+        // Cerrar modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
+        modal.hide();
+
+    } catch (error) {
+        alert("Error actualizando perfil: " + error.message);
+    } finally {
+        saveBtn.disabled = false;
+        spinner.classList.add('d-none');
+    }
+});
+
+// Previsualización rápida al seleccionar archivo (antes de subir)
+document.getElementById('avatarFile').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const src = URL.createObjectURL(file);
+        document.getElementById('avatarPreview').src = src;
+    }
+});
