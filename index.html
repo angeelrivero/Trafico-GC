@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tráfico Gran Canaria - Live Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --accent: #e94560;
+            --text-light: #f1f1f1;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', sans-serif;
+            padding-bottom: 60px;
+        }
+
+        .navbar {
+            background-color: var(--bg-card);
+            border-bottom: 2px solid var(--accent);
+            z-index: 1000;
+        }
+
+        .btn-vip {
+            background-color: gold;
+            color: #000;
+            font-weight: bold;
+        }
+
+        #googleMap {
+            height: 450px;
+            width: 100%;
+            border-radius: 10px;
+            border: 2px solid #333;
+            transition: height 0.3s ease;
+        }
+
+        .camera-card {
+            background-color: var(--bg-card);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .iframe-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+        }
+
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .traffic-stats {
+            padding: 10px;
+            background: #0f3460;
+            font-size: 0.85rem;
+            border-top: 1px solid #333;
+        }
+
+        .ad-banner {
+            background-color: #eee;
+            color: #333;
+            padding: 15px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 2px dashed #999;
+        }
+
+        .forum-box {
+            height: 450px;
+            overflow-y: auto;
+            background: var(--bg-card);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+
+        .forum-msg {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border-left: 3px solid var(--accent);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            #googleMap {
+                height: 300px;
+            }
+
+            .forum-box {
+                height: 250px;
+            }
+
+            .traffic-legend span {
+                font-size: 0.75rem;
+            }
+
+            h3 {
+                font-size: 1.3rem;
+                margin-top: 10px;
+            }
+
+            .col-md-6 {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fas fa-road"></i> Tráfico GC <small class="text-muted"
+                    style="font-size: 12px;">App</small></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal"
+                            data-bs-target="#loginModal">Iniciar Sesión</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-sm btn-vip ms-2 mt-2 mt-lg-0" href="#">Hacerse VIP
+                            <i class="fas fa-crown"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+
+        <div class="ad-banner">
+            <small>ANUNCIO (Solo usuarios FREE)</small><br>
+            <strong>¿Neumáticos nuevos? Oferta especial en Las Palmas</strong>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <h3 class="mb-3">Mapa de Retenciones</h3>
+                <div id="googleMap"></div>
+
+                <div class="mt-2 d-flex flex-wrap gap-2 justify-content-center bg-dark p-2 rounded traffic-legend">
+                    <span class="d-flex align-items-center gap-1"><i class="fas fa-circle text-success"></i> 0-2
+                        (Fluido)</span>
+                    <span class="d-flex align-items-center gap-1"><i class="fas fa-circle text-warning"></i> 3-6
+                        (Denso)</span>
+                    <span class="d-flex align-items-center gap-1"><i class="fas fa-circle text-danger"></i> 7-9
+                        (Lento)</span>
+                    <span class="d-flex align-items-center gap-1"><i
+                            class="fas fa-circle text-dark border border-light rounded-circle"></i> 10 (Colapso)</span>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                <h3 class="mb-3">Comunidad</h3>
+                <div class="forum-box">
+                    <div class="forum-msg">
+                        <small class="text-muted">18:30</small><br>
+                        <strong>Javi_Telde:</strong> Cuidado en la bajada de la GC-1, hay un coche averiado.
+                    </div>
+                    <div class="forum-msg" style="border-left-color: gold;">
+                        <small class="text-muted">18:35</small><br>
+                        <strong><i class="fas fa-crown text-warning"></i> Admin:</strong> Confirmado nivel 8 en Belén
+                        María.
+                    </div>
+                    <div class="forum-msg">
+                        <small class="text-muted">18:42</small><br>
+                        <strong>MariaCar:</strong> ¿Cómo está la carretera del norte?
+                    </div>
+                </div>
+                <div class="input-group mt-2">
+                    <input type="text" class="form-control bg-dark text-light border-secondary"
+                        placeholder="Reportar...">
+                    <button class="btn btn-danger"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border-color: var(--accent);">
+
+        <h3 class="mb-4"><i class="fas fa-video"></i> Cámaras DGT & ThingSpeak</h3>
+
+        <div class="row g-3" id="cameras-container">
+        </div>
+
+    </div>
+
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Acceso Usuarios</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Inicia sesión para gestionar tus alertas de Telegram.</p>
+                    <input type="text" class="form-control mb-2" placeholder="Email">
+                    <input type="password" class="form-control mb-3" placeholder="Contraseña">
+                    <button class="btn btn-primary w-100">Entrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ---------------------------------------------------------
+        // 1. CONFIGURACIÓN: CÁMARAS Y TRAMOS DE CARRETERA
+        // ---------------------------------------------------------
+
+        const camerasData = [
+            { id: 1, name: "GC1 Telde", level: 8, videoId: "KmcLujr7PU0" },
+            { id: 2, name: "GC1 Jinamar", level: 7, videoId: "2vDowXZy9cc" },
+            { id: 3, name: "GC2 Arucas", level: 5, videoId: "z1E5ciDe3a0" },
+            { id: 4, name: "GC2 Bañaderos", level: 1, videoId: "XGzncIaJJ44" },
+            { id: 5, name: "Mesa y López", level: 5, videoId: "gfsJIcCZzlI" },
+            { id: 6, name: "La Ballena", level: 4, videoId: "ZVgz2e-wMR4" },
+            { id: 7, name: "Siete Palmas", level: 3, videoId: "eMbMc7VnI5Q" },
+            { id: 8, name: "Maspalomas Sur", level: 0, videoId: "xrYXDI5uAoA" }
+        ];
+
+        const trafficSegments = [
+            {
+                name: "GC1 - Telde (Bajada)",
+                origin: "28.016694, -15.405527",
+                destination: "28.051912, -15.418465",
+                level: 8 // ROJO
+            },
+            {
+                name: "GC2 - Norte (Arucas)",
+                origin: "28.129994, -15.462319",
+                destination: "28.138446, -15.519003",
+                level: 2 // VERDE
+            },
+            {
+                name: "Mesa y Lopez (Ciudad)",
+                origin: "28.132808, -15.440263",
+                destination: "28.130386, -15.446860",
+                level: 5 // NARANJA
+            }
+        ];
+
+        // ---------------------------------------------------------
+        // 2. GENERADOR DE GRID DE CÁMARAS
+        // ---------------------------------------------------------
+        const container = document.getElementById('cameras-container');
+
+        camerasData.forEach(cam => {
+            let barColor = 'bg-success';
+            if (cam.level >= 3) barColor = 'bg-warning';
+            if (cam.level >= 7) barColor = 'bg-danger';
+            if (cam.level == 10) barColor = 'bg-dark';
+
+            // AQUÍ ESTÁ EL CAMBIO IMPORTANTE: playsinline=1
+            const html = `
+                <div class="col-12 col-md-6 col-lg-3"> 
+                    <div class="camera-card h-100"> 
+                        <div class="card-header">
+                            <span>${cam.name}</span> <span class="badge ${barColor}">${cam.level}/10</span>
+                        </div>
+                        <div class="iframe-container">
+                            <iframe 
+                                src="https://www.youtube.com/embed/${cam.videoId}?autoplay=1&mute=1&playsinline=1&rel=0" 
+                                title="Cámara Tráfico"
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                        <div class="traffic-stats text-center">
+                            <div class="progress" style="height: 6px; background: #333;">
+                                <div class="progress-bar ${barColor}" role="progressbar" style="width: ${cam.level * 10}%"></div>
+                            </div>
+                            <small class="text-muted mt-1 d-block" style="font-size:10px;">Live Data: ThingSpeak</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+
+        // ---------------------------------------------------------
+        // 3. MAPA GOOGLE
+        // ---------------------------------------------------------
+        function initMap() {
+            const granCanaria = { lat: 28.05, lng: -15.45 };
+
+            const darkStyle = [
+                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+                { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+                { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] }
+            ];
+
+            const map = new google.maps.Map(document.getElementById("googleMap"), {
+                zoom: 11,
+                center: granCanaria,
+                styles: darkStyle,
+                disableDefaultUI: true
+            });
+
+            const directionsService = new google.maps.DirectionsService();
+
+            function getColorByLevel(level) {
+                if (level <= 2) return "#00FF00";
+                if (level <= 6) return "#FFA500";
+                if (level <= 9) return "#FF0000";
+                return "#000000";
+            }
+
+            trafficSegments.forEach(segment => {
+                const request = {
+                    origin: segment.origin,
+                    destination: segment.destination,
+                    travelMode: 'DRIVING'
+                };
+
+                directionsService.route(request, function (result, status) {
+                    if (status == 'OK') {
+                        const exactPath = result.routes[0].overview_path;
+                        const trafficPolyline = new google.maps.Polyline({
+                            path: exactPath,
+                            geodesic: true,
+                            strokeColor: getColorByLevel(segment.level),
+                            strokeOpacity: 0.8,
+                            strokeWeight: 6
+                        });
+                        trafficPolyline.setMap(map);
+                    } else {
+                        console.error('Error ruta: ' + segment.name);
+                    }
+                });
+            });
+        }
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBGAtMh3Cnyhc4dqRCu5HLcj71x8KPihpk&callback=initMap"
+        async defer></script>
+
+</body>
+
+</html>
