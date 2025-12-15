@@ -31,6 +31,18 @@ if (document.getElementById('registerForm')) {
             return;
         }
 
+        // --- BLOQUE NUEVO PARA GUARDAR EL EMAIL ---
+        if (data.user) {
+            // Intentamos actualizar/crear el perfil con el email
+            await supabase.from('profiles').upsert({
+                id: data.user.id,
+                email: email, // <--- AQUÍ GUARDAMOS EL EMAIL
+                username: email.split('@')[0], // Usamos la parte antes del @ como usuario inicial
+                updated_at: new Date()
+            });
+        }
+        // ------------------------------------------
+
         if (data.user && data.user.identities && data.user.identities.length === 0) {
             alert("¡Ese correo ya está registrado! Por favor, inicia sesión.");
             return;
@@ -317,6 +329,21 @@ async function getProfile(session) {
     if (!session) return;
     const { user } = session;
 
+    // --- BLOQUE DE AUTOCORRECCIÓN ---
+    // Si el usuario entra y no tenemos su email público, lo guardamos ahora mismo.
+    const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', user.id)
+        .single();
+
+    if (currentProfile && !currentProfile.email) {
+        console.log("Detectado usuario sin email público. Corrigiendo...");
+        await supabase.from('profiles').update({ 
+            email: user.email 
+        }).eq('id', user.id);
+    }
+    // --------------------------------
     const { data, error } = await supabase
         .from('profiles')
         .select(`username, website, avatar_url`)
