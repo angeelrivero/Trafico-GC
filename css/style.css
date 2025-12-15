@@ -1,59 +1,122 @@
 :root {
-    --bg-dark: #1a1a2e;
-    --bg-card: #16213e;
-    --accent: #e94560;
-    --text-light: #f1f1f1;
+    /* Paleta Canaria: Volcán, Mar y Sol */
+    --bg-dark: #181818;      /* Gris volcánico oscuro */
+    --bg-card: #242424;      /* Gris volcánico medio */
+    --accent: #FFCC00;       /* Amarillo Canario (Bandera) */
+    --accent-blue: #0071BC;  /* Azul Atlántico (Bandera) */
+    --text-light: #f4f4f4;   /* Blanco nube */
+    --text-dim: #bbbbbb;     /* Gris claro para textos secundarios */
 }
 
 body {
-    background-color: var(--bg-dark);
-    color: var(--text-light);
-    font-family: 'Segoe UI', sans-serif;
-    padding-bottom: 60px;
+    background-color: var(--bg-dark) !important;
+    color: var(--text-light) !important;
+    font-family: 'Montserrat', sans-serif;
 }
 
+/* --- CORRECCIONES DE VISIBILIDAD (Emails y textos pequeños) --- */
+
+/* Forzar que los enlaces del footer sean claros */
+.footer-custom a {
+    color: var(--text-dim) !important;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-custom a:hover {
+    color: var(--accent) !important; /* Amarillo al pasar el ratón */
+}
+
+/* Forzar que el texto "muted" de Bootstrap sea gris claro, no gris oscuro */
+.text-muted {
+    color: #999 !important;
+}
+
+/* --- NAVBAR --- */
 .navbar {
-    background-color: var(--bg-card);
-    border-bottom: 2px solid var(--accent);
+    background-color: var(--accent-blue);
+    border-bottom: 4px solid var(--accent);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     z-index: 1000;
 }
 
-.btn-vip {
-    background-color: gold;
-    color: #000;
-    font-weight: bold;
+.navbar-brand span {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
+/* Botones */
+.btn-vip {
+    background-color: var(--accent);
+    color: #000;
+    font-weight: 800;
+    border: none;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
+}
+
+.btn-primary {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.btn-info {
+    background-color: var(--accent);
+    color: #000;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-outline-light:hover {
+    background-color: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+}
+
+/* --- MAPA --- */
 #googleMap {
     height: 450px;
     width: 100%;
-    border-radius: 10px;
-    border: 2px solid #333;
+    border-radius: 15px;
+    border: 2px solid #444;
     transition: height 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 
+/* --- TARJETAS DE CÁMARAS --- */
 .camera-card {
     background-color: var(--bg-card);
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
     margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    border: 1px solid #333;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.camera-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+    border-color: var(--accent);
 }
 
 .card-header {
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.2);
-    font-weight: bold;
+    padding: 12px 15px;
+    background: rgba(0, 0, 0, 0.3);
+    font-weight: 600;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #333;
 }
 
+/* --- VIDEO --- */
 .iframe-container {
     position: relative;
     padding-bottom: 56.25%;
     height: 0;
     overflow: hidden;
+    background: #000;
 }
 
 .iframe-container iframe {
@@ -64,21 +127,28 @@ body {
     height: 100%;
 }
 
+/* --- BARRAS DE ESTADO --- */
 .traffic-stats {
-    padding: 10px;
-    background: #0f3460;
+    padding: 12px;
+    background: #1f1f1f;
     font-size: 0.85rem;
     border-top: 1px solid #333;
 }
 
+.progress {
+    background-color: #444;
+    border-radius: 10px;
+}
+
+/* --- ELEMENTOS EXTRA --- */
 .ad-banner {
-    background-color: #eee;
+    background: #e0e0e0; /* Fondo claro para contraste del anuncio */
     color: #333;
     padding: 15px;
     text-align: center;
     margin: 20px 0;
-    border-radius: 5px;
-    border: 2px dashed #999;
+    border-radius: 8px;
+    border: 2px dashed var(--accent-blue);
 }
 
 .forum-box {
@@ -86,74 +156,59 @@ body {
     overflow-y: auto;
     background: var(--bg-card);
     padding: 15px;
-    border-radius: 10px;
+    border-radius: 12px;
     border: 1px solid #333;
 }
 
 .forum-msg {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 8px;
-    margin-bottom: 8px;
-    border-radius: 5px;
-    border-left: 3px solid var(--accent);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border-left: 4px solid var(--accent);
     font-size: 0.9rem;
 }
 
-/* Estilo para enlace tipo botón */
+/* Texto de acento en la web */
+.text-info {
+    color: var(--accent) !important;
+}
+
 .cursor-pointer {
     cursor: pointer;
 }
 
+/* --- RESPONSIVE --- */
 @media (max-width: 768px) {
-    #googleMap {
-        height: 300px;
-    }
-
-    .forum-box {
-        height: 250px;
-    }
-
-    .traffic-legend span {
-        font-size: 0.75rem;
-    }
-
-    h3 {
-        font-size: 1.3rem;
-        margin-top: 10px;
-    }
-
-    .col-md-6 {
-        width: 100%;
-    }
+    #googleMap { height: 300px; }
+    .forum-box { height: 250px; }
+    .traffic-legend span { font-size: 0.75rem; }
+    h3 { font-size: 1.5rem; margin-top: 10px; font-weight: 700; }
 }
 
-
-/* Imagen grande en el modal */
+/* --- AVATARS --- */
 .profile-preview {
     width: 120px;
     height: 120px;
     object-fit: cover;
     border-radius: 50%;
-    border: 3px solid var(--accent);
+    border: 4px solid var(--accent);
 }
 
-/* Imagen pequeña en el navbar */
 .nav-avatar {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     object-fit: cover;
     border-radius: 50%;
-    border: 2px solid var(--accent);
+    border: 2px solid #fff;
     margin-right: 5px;
 }
 
-
 .chat-avatar {
-    width: 25px;
-    height: 25px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    margin-right: 8px;
-    vertical-align: middle;
+    margin-right: 10px;
     object-fit: cover;
     border: 1px solid var(--accent);
 }
@@ -170,21 +225,59 @@ body {
     float: right;
 }
 
-
-/* Efecto hover para las tarjetas clickeables */
+/* --- LINKS --- */
 .camera-card-link {
-    text-decoration: none; /* Quitar subrayado del enlace */
-    color: inherit; /* Mantener colores de texto */
+    text-decoration: none;
+    color: inherit;
     display: block;
     height: 100%;
-    transition: transform 0.2s;
 }
-
-.camera-card-link:hover {
-    transform: translateY(-5px); /* Efecto de elevación al pasar el ratón */
-}
-
-/* IMPORTANTE: Esto permite hacer click "a través" del video en la vista previa */
 .camera-card-link .iframe-container iframe {
     pointer-events: none;
+}
+
+/* --- FOOTER CANARIO --- */
+.footer-custom {
+    background-color: var(--bg-card);
+    border-top: 4px solid var(--accent);
+    color: #ccc;
+    padding: 50px 0 20px 0;
+    margin-top: 60px;
+    position: relative;
+}
+
+/* Bandera en el borde superior del footer */
+.footer-custom::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 0;
+    width: 50%;
+    height: 4px;
+    background-color: #fff;
+    z-index: 10;
+}
+
+.footer-custom h5 {
+    color: var(--text-light);
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links li { margin-bottom: 12px; }
+
+.footer-bottom {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
+    font-size: 0.85rem;
 }

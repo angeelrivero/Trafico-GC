@@ -1,10 +1,8 @@
 // ---------------------------------------------------------
 // 0. CONFIGURACIÓN SUPABASE
 // ---------------------------------------------------------
-
 const SUPABASE_URL = 'https://wfoidmoojjqwcltcpyaf.supabase.co'; 
 const SUPABASE_KEY = 'sb_publishable_xzIZVjCgxaTyOwS1lrjHpA_SzEOtaxq';
-
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ---------------------------------------------------------
@@ -83,7 +81,6 @@ document.addEventListener('click', function(e){
     }
 });
 
-
 // 4. ESCUCHAR CAMBIOS DE ESTADO
 supabase.auth.onAuthStateChange((event, session) => {
     updateUI(session);
@@ -147,7 +144,7 @@ const camerasData = [
         videoId: "ZVgz2e-wMR4", 
         tsChannel: "3199441", 
         tsField: "1",
-        readKey: "Q1XCOL5COQL3D5QB" // <--- AÑADIDA LA CLAVE DE LECTURA
+        readKey: "Q1XCOL5COQL3D5QB" 
     },
     
     { id: 7, name: "Siete Palmas", level: 3, videoId: "eMbMc7VnI5Q", tsChannel: "000000", tsField: "1" },
@@ -172,7 +169,8 @@ if (container) {
         if (cam.level >= 7) barColor = 'bg-danger';
         if (cam.level == 10) barColor = 'bg-dark';
 
-        // AÑADIMOS IDs ÚNICOS (badge-ID y bar-ID) PARA PODER ACTUALIZARLOS
+        // --- CORRECCIÓN DE VISIBILIDAD DE TEXTO "Click para ver..." ---
+        // Se cambió el color en el style del small
         const html = `
             <div class="col-12 col-md-6 col-lg-3"> 
                 <a href="detalle.html?id=${cam.id}" class="camera-card-link">
@@ -194,7 +192,7 @@ if (container) {
                             <div class="progress" style="height: 6px; background: #333;">
                                 <div id="bar-${cam.id}" class="progress-bar ${barColor}" role="progressbar" style="width: ${cam.level * 10}%"></div>
                             </div>
-                            <small class="text-muted mt-1 d-block" style="font-size:10px;">Click para ver estadísticas detalladas</small>
+                            <small class="d-block mt-2" style="color: #ccc; font-size: 11px;">Click para ver estadísticas detalladas</small>
                         </div>
                     </div>
                 </a>
@@ -203,7 +201,6 @@ if (container) {
         container.innerHTML += html;
     });
 
-    // ACTIVAR ACTUALIZACIÓN AUTOMÁTICA
     updateDashboardLive();
     setInterval(updateDashboardLive, 15000); 
 }
@@ -213,11 +210,9 @@ if (container) {
 // ---------------------------------------------------------
 async function updateDashboardLive() {
     camerasData.forEach(async (cam) => {
-        // Solo actualizamos si tiene un canal real configurado
         if (!cam.tsChannel || cam.tsChannel === "000000") return;
 
         try {
-            // Construimos la URL con la Read Key
             let url = `https://api.thingspeak.com/channels/${cam.tsChannel}/feeds/last.json`;
             if (cam.readKey) {
                 url += `?api_key=${cam.readKey}`;
@@ -225,28 +220,20 @@ async function updateDashboardLive() {
 
             const response = await fetch(url);
             const data = await response.json();
-            
-            // Leemos el valor del campo
             const val = data[`field${cam.tsField}`];
             
             if (val !== null && val !== undefined) {
                 const level = parseInt(val);
-                
-                // Buscamos los elementos HTML
                 const badge = document.getElementById(`badge-${cam.id}`);
                 const bar = document.getElementById(`bar-${cam.id}`);
 
                 if (badge && bar) {
-                    // Actualizar Texto
                     badge.innerText = `${level}/10`;
+                    let newColorClass = 'bg-success'; 
+                    if (level >= 3) newColorClass = 'bg-warning'; 
+                    if (level >= 7) newColorClass = 'bg-danger'; 
+                    if (level == 10) newColorClass = 'bg-dark'; 
 
-                    // Calcular nuevo color
-                    let newColorClass = 'bg-success'; // Verde
-                    if (level >= 3) newColorClass = 'bg-warning'; // Naranja
-                    if (level >= 7) newColorClass = 'bg-danger';  // Rojo
-                    if (level == 10) newColorClass = 'bg-dark';   // Negro
-
-                    // Cambiar clases visuales
                     badge.className = `badge ${newColorClass}`;
                     bar.style.width = `${level * 10}%`;
                     bar.className = `progress-bar ${newColorClass}`;
@@ -259,20 +246,26 @@ async function updateDashboardLive() {
 }
 
 // ---------------------------------------------------------
-// 3. MAPA GOOGLE
+// 3. MAPA GOOGLE (ESTILO VOLCÁNICO)
 // ---------------------------------------------------------
 window.initMap = function() {
     const mapDiv = document.getElementById("googleMap");
     if(!mapDiv) return;
 
     const granCanaria = { lat: 28.05, lng: -15.45 };
+    
+    // Estilo personalizado: Gris volcánico neutro con Mar Negro
     const darkStyle = [
-        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-        { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
-        { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
-        { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] }
+        { elementType: "geometry", stylers: [{ color: "#212121" }] },
+        { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+        { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
+        { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+        { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2c2c2c" }] },
+        { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
+        { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] }, 
+        { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3d3d3d" }] }
     ];
 
     const map = new google.maps.Map(mapDiv, {
@@ -285,10 +278,10 @@ window.initMap = function() {
     const directionsService = new google.maps.DirectionsService();
 
     function getColorByLevel(level) {
-        if (level <= 2) return "#00FF00";
-        if (level <= 6) return "#FFA500";
-        if (level <= 9) return "#FF0000";
-        return "#000000";
+        if (level <= 2) return "#00FF00"; 
+        if (level <= 6) return "#FFCC00"; 
+        if (level <= 9) return "#FF0000"; 
+        return "#FFFFFF"; 
     }
 
     trafficSegments.forEach(segment => {
@@ -305,8 +298,8 @@ window.initMap = function() {
                     path: exactPath,
                     geodesic: true,
                     strokeColor: getColorByLevel(segment.level),
-                    strokeOpacity: 0.8,
-                    strokeWeight: 6
+                    strokeOpacity: 1.0, 
+                    strokeWeight: 5
                 });
                 trafficPolyline.setMap(map);
             }
