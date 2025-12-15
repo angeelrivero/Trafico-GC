@@ -125,22 +125,24 @@
         // ----------------------------------------------------
         // 1. CONFIGURACIÓN DE TUS CÁMARAS Y THINGSPEAK
         // ----------------------------------------------------
-        // IMPORTANTE: Aquí debes poner el 'channelId' y el 'field' correcto para cada cámara.
-        // 'field1' suele ser el primer dato que envías.
         
         const camerasData = [
-            { 
-                id: 1, 
-                name: "GC1 Telde", 
-                videoId: "KmcLujr7PU0", 
-                tsChannel: "3199441", // <--- PON TU ID DE CANAL REAL AQUÍ
-                tsField: "1"         // <--- QUÉ FIELD USAS (1, 2, 3...)
-            },
+            // He quitado el ID de Telde (puesto a 000000) porque dijiste "solo en la ballena"
+            { id: 1, name: "GC1 Telde", videoId: "KmcLujr7PU0", tsChannel: "000000", tsField: "1" },
             { id: 2, name: "GC1 Jinamar", videoId: "2vDowXZy9cc", tsChannel: "000000", tsField: "1" },
             { id: 3, name: "GC2 Arucas", videoId: "z1E5ciDe3a0", tsChannel: "000000", tsField: "1" },
             { id: 4, name: "GC2 Bañaderos", videoId: "XGzncIaJJ44", tsChannel: "000000", tsField: "1" },
             { id: 5, name: "Mesa y López", videoId: "gfsJIcCZzlI", tsChannel: "000000", tsField: "1" },
-            { id: 6, name: "La Ballena", videoId: "ZVgz2e-wMR4", tsChannel: "000000", tsField: "1" },
+            
+            // AQUÍ ESTÁ LA BALLENA CON TU ID CONFIGURADO
+            { 
+                id: 6, 
+                name: "La Ballena", 
+                videoId: "ZVgz2e-wMR4", 
+                tsChannel: "3199441", // <--- ID ASIGNADO AQUÍ
+                tsField: "1" 
+            },
+            
             { id: 7, name: "Siete Palmas", videoId: "eMbMc7VnI5Q", tsChannel: "000000", tsField: "1" },
             { id: 8, name: "Maspalomas Sur", videoId: "xrYXDI5uAoA", tsChannel: "000000", tsField: "1" }
         ];
