@@ -4,39 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalle Cámara - Tráfico GC</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="css/style.css">
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
-        body {
-            overflow-x: hidden;
-            background-color: #1a1a2e;
-        }
-        
-        .video-card {
-            border: 1px solid #333;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            background-color: #000;
-            overflow: hidden;
-        }
-        
-        .stats-card {
-            height: 100%;
-            border-left: 1px solid #333;
-            background: #16213e;
-        }
-
-        .fade-change {
-            transition: color 0.5s ease;
-        }
-
-        @media (min-width: 1400px) {
-            .container-fluid {
-                padding-left: 30px;
-                padding-right: 30px;
-            }
-        }
+        body { overflow-x: hidden; background-color: #1a1a2e; }
+        .video-card { border: 1px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.5); background-color: #000; overflow: hidden; }
+        .stats-card { height: 100%; border-left: 1px solid #333; background: #16213e; }
+        .fade-change { transition: color 0.5s ease; }
+        @media (min-width: 1400px) { .container-fluid { padding-left: 30px; padding-right: 30px; } }
     </style>
 </head>
 <body>
@@ -56,12 +37,24 @@
     <div class="container-fluid px-3">
         <div class="row g-3">
             
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <button id="btnSubscribe" class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-spinner fa-spin"></i> Cargando...
+                    </button>
+                </div>
+                <div id="vip-badge" class="d-none">
+                    <span class="badge bg-warning text-dark"><i class="fas fa-crown"></i> USUARIO VIP</span>
+                </div>
+            </div>
+
             <div class="col-lg-9 col-xl-10">
                 <div class="card video-card text-light">
                     <div class="card-body p-0">
                         <div id="videoContainer" class="ratio ratio-16x9">
-                            <div class="d-flex justify-content-center align-items-center h-100 text-muted">
-                                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <div class="d-flex flex-column justify-content-center align-items-center h-100 text-muted">
+                                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                <span>Cargando señal de vídeo...</span>
                             </div>
                         </div>
                     </div>
@@ -126,117 +119,138 @@
                         <img src="images/Logo_Original.png" alt="Logo" style="height: 30px; margin-right: 10px;">
                         GrancaCam
                     </h5>
-                    <p class="small">Monitorización de tráfico en tiempo real en Gran Canaria mediante cámaras DGT y sensores IoT.</p>
-                    <div class="mt-3">
-                        <a href="#" class="text-light me-3"><i class="fab fa-github fa-lg"></i></a>
-                        <a href="#" class="text-light me-3"><i class="fab fa-twitter fa-lg"></i></a>
-                        <a href="#" class="text-light"><i class="fab fa-instagram fa-lg"></i></a>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <h5>Enlaces Útiles</h5>
-                    <ul class="footer-links">
-                        <li><a href="index.html"><i class="fas fa-chevron-right text-muted me-2" style="font-size: 0.7rem;"></i> Inicio</a></li>
-                        <li><a href="index.html#googleMap"><i class="fas fa-chevron-right text-muted me-2" style="font-size: 0.7rem;"></i> Mapa de Tráfico</a></li>
-                        <li><a href="aviso-legal.html"><i class="fas fa-chevron-right text-muted me-2" style="font-size: 0.7rem;"></i> Aviso Legal y Condiciones</a></li>
-                    </ul>
+                    <p class="small">Monitorización de tráfico en tiempo real en Gran Canaria.</p>
                 </div>
                 <div class="col-lg-4 col-md-12 mb-4">
                     <h5>Contacto</h5>
-                    <p class="small mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i> Gran Canaria, España</p>
-                    <p class="small mb-2"><i class="fas fa-envelope text-danger me-2"></i> <a href="mailto:angel.rivero104@alu.ulpgc.es" class="text-muted text-decoration-none">angel.rivero104@alu.ulpgc.es</a></p>
-                    <p class="small mb-2"><i class="fas fa-envelope text-danger me-2"></i> <a href="mailto:isaac.vera102@alu.ulpgc.es" class="text-muted text-decoration-none">isaac.vera102@alu.ulpgc.es</a></p>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <div class="row">
-                    <div class="col-md-6 text-md-start">&copy; 2025 GrancaCam. Todos los derechos reservados.</div>
-                    <div class="col-md-6 text-md-end mt-2 mt-md-0"><span class="text-muted">Desarrollado por A. Rivero & I. Vera</span></div>
+                    <p class="small mb-2"><i class="fas fa-envelope text-danger me-2"></i> <a href="mailto:angel.rivero104@alu.ulpgc.es">angel.rivero104@alu.ulpgc.es</a></p>
                 </div>
             </div>
         </div>
     </footer>
+
+    <div class="modal fade" id="vipModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-warning"><i class="fas fa-crown"></i> Hazte Premium</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <h3>Elimina anuncios y alertas ilimitadas</h3>
+                    <p>Por solo <strong>4.99€/mes</strong></p>
+                    <ul class="text-start mb-4" style="list-style: none;">
+                        <li><i class="fas fa-check text-success"></i> Suscripción a todas las cámaras</li>
+                        <li><i class="fas fa-check text-success"></i> Alertas por Email</li>
+                        <li><i class="fas fa-check text-success"></i> Sin publicidad</li>
+                    </ul>
+                    <div id="paypal-button-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=EUR"></script>
+    
+    <script src="js/main.js"></script>
 
     <script>
-        // ----------------------------------------------------
-        // 1. CONFIGURACIÓN
-        // ----------------------------------------------------
-        
-        const camerasData = [
-            { id: 1, name: "GC1 Telde", videoId: "KmcLujr7PU0", tsChannel: "000000", tsField: "1" },
-            { id: 2, name: "GC1 Jinamar", videoId: "2vDowXZy9cc", tsChannel: "000000", tsField: "1" },
-            { id: 3, name: "GC2 Arucas", videoId: "z1E5ciDe3a0", tsChannel: "000000", tsField: "1" },
-            { id: 4, name: "GC2 Bañaderos", videoId: "XGzncIaJJ44", tsChannel: "000000", tsField: "1" },
-            { id: 5, name: "Mesa y López", videoId: "gfsJIcCZzlI", tsChannel: "000000", tsField: "1" },
-            
-            // --- LA BALLENA (Configurada) ---
-            { 
-                id: 6, 
-                name: "La Ballena", 
-                videoId: "ZVgz2e-wMR4", 
-                tsChannel: "3199441", 
-                tsField: "1",
-                readKey: "Q1XCOL5COQL3D5QB" 
-            },
-            
-            { id: 7, name: "Siete Palmas", videoId: "eMbMc7VnI5Q", tsChannel: "000000", tsField: "1" },
-            { id: 8, name: "Maspalomas Sur", videoId: "xrYXDI5uAoA", tsChannel: "000000", tsField: "1" }
-        ];
-
-        // ----------------------------------------------------
-        // 2. INICIALIZACIÓN
-        // ----------------------------------------------------
-        const urlParams = new URLSearchParams(window.location.search);
-        const camId = parseInt(urlParams.get('id'));
-        const camera = camerasData.find(c => c.id === camId);
-
-        if (camera) {
-            document.title = `${camera.name} | Live`;
-            document.getElementById('cameraTitle').innerText = camera.name;
-            document.getElementById('ts-channel').innerText = camera.tsChannel;
-
-            const iframe = `
-                <iframe 
-                    src="https://www.youtube.com/embed/${camera.videoId}?autoplay=1&mute=1&rel=0&playsinline=1" 
-                    title="Cámara Tráfico"
-                    class="w-100 h-100"
-                    style="border:0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
-            `;
-            document.getElementById('videoContainer').innerHTML = iframe;
+        document.addEventListener("DOMContentLoaded", function() {
+            // ----------------------------------------------------
+            // DATOS LOCALES (Nombre diferente para evitar conflicto con main.js)
+            // ----------------------------------------------------
+            const detailCameras = [
+                { id: 1, name: "GC1 Telde", videoId: "KmcLujr7PU0", tsChannel: "000000", tsField: "1" },
+                { id: 2, name: "GC1 Jinamar", videoId: "2vDowXZy9cc", tsChannel: "000000", tsField: "1" },
+                { id: 3, name: "GC2 Arucas", videoId: "z1E5ciDe3a0", tsChannel: "000000", tsField: "1" },
+                { id: 4, name: "GC2 Bañaderos", videoId: "XGzncIaJJ44", tsChannel: "000000", tsField: "1" },
+                { id: 5, name: "Mesa y López", videoId: "gfsJIcCZzlI", tsChannel: "000000", tsField: "1" },
+                { 
+                    id: 6, 
+                    name: "La Ballena", 
+                    videoId: "ZVgz2e-wMR4", 
+                    tsChannel: "3199441", 
+                    tsField: "1",
+                    readKey: "Q1XCOL5COQL3D5QB" 
+                },
+                { id: 7, name: "Siete Palmas", videoId: "eMbMc7VnI5Q", tsChannel: "000000", tsField: "1" },
+                { id: 8, name: "Maspalomas Sur", videoId: "xrYXDI5uAoA", tsChannel: "000000", tsField: "1" }
+            ];
 
             // ----------------------------------------------------
-            // 3. CONEXIÓN A THINGSPEAK
+            // CARGAR VÍDEO
             // ----------------------------------------------------
+            const urlParams = new URLSearchParams(window.location.search);
+            const camId = parseInt(urlParams.get('id'));
             
-            async function fetchThingSpeakData() {
-                if(camera.tsChannel === "000000") {
+            // Usamos la lista local 'detailCameras'
+            const camera = detailCameras.find(c => c.id === camId);
+
+            if (camera) {
+                // 1. Poner Título
+                document.title = `${camera.name} | Live`;
+                const titleEl = document.getElementById('cameraTitle');
+                if(titleEl) titleEl.innerText = camera.name;
+                
+                const tsEl = document.getElementById('ts-channel');
+                if(tsEl) tsEl.innerText = camera.tsChannel;
+
+                // 2. Inyectar Iframe (Reemplaza el Spinner)
+                const videoContainer = document.getElementById('videoContainer');
+                if(videoContainer) {
+                    const iframeHtml = `
+                        <iframe 
+                            src="https://www.youtube.com/embed/${camera.videoId}?autoplay=1&mute=1&rel=0&playsinline=1" 
+                            title="Cámara Tráfico"
+                            class="w-100 h-100"
+                            style="border:0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                    `;
+                    videoContainer.innerHTML = iframeHtml;
+                }
+
+                // 3. Iniciar ThingSpeak
+                fetchThingSpeakData(camera);
+                setInterval(() => fetchThingSpeakData(camera), 15000);
+
+            } else {
+                // ERROR: Cámara no encontrada en el array
+                const videoContainer = document.getElementById('videoContainer');
+                if(videoContainer) {
+                    videoContainer.innerHTML = `
+                        <div class="d-flex flex-column justify-content-center align-items-center h-100 text-danger">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <span>Error: Cámara no encontrada (ID ${camId})</span>
+                        </div>
+                    `;
+                }
+            }
+
+            // ----------------------------------------------------
+            // LÓGICA THINGSPEAK
+            // ----------------------------------------------------
+            async function fetchThingSpeakData(cam) {
+                if(!cam || cam.tsChannel === "000000") {
                     updateUI(0);
                     return; 
                 }
 
                 try {
-                    let url = `https://api.thingspeak.com/channels/${camera.tsChannel}/feeds/last.json`;
-                    if (camera.readKey && camera.readKey !== "") {
-                        url += `?api_key=${camera.readKey}`;
+                    let url = `https://api.thingspeak.com/channels/${cam.tsChannel}/feeds/last.json`;
+                    if (cam.readKey && cam.readKey !== "") {
+                        url += `?api_key=${cam.readKey}`;
                     }
-
-                    console.log("Solicitando datos a:", url); 
 
                     const response = await fetch(url);
                     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
                     const data = await response.json();
-                    
-                    console.log("Datos recibidos de ThingSpeak:", data);
-
-                    const fieldValue = data[`field${camera.tsField}`];
+                    const fieldValue = data[`field${cam.tsField}`];
                     
                     if (fieldValue === null || fieldValue === undefined) {
-                        console.warn("El campo está vacío.");
                         updateUI(0);
                         return;
                     }
@@ -246,18 +260,21 @@
 
                 } catch (error) {
                     console.error("Error conectando a ThingSpeak:", error);
-                    document.getElementById('status-badge').innerHTML = '<span class="badge bg-danger">Error Conexión</span>';
+                    const badge = document.getElementById('status-badge');
+                    if(badge) badge.innerHTML = '<span class="badge bg-danger">Error Conexión</span>';
                 }
             }
 
             function updateUI(level) {
                 const display = document.getElementById('currentLevelDisplay');
-                const badgeContainer = document.querySelector('#status-badge');
+                const badgeContainer = document.getElementById('status-badge');
+                const lastUpdate = document.getElementById('lastUpdate');
                 
-                display.innerText = level;
-
-                const now = new Date();
-                document.getElementById('lastUpdate').innerText = now.toLocaleTimeString();
+                if(display) display.innerText = level;
+                if(lastUpdate) {
+                    const now = new Date();
+                    lastUpdate.innerText = now.toLocaleTimeString();
+                }
 
                 let badgeClass = '';
                 let badgeText = '';
@@ -277,16 +294,10 @@
                     colorHex = '#dc3545'; 
                 }
 
-                badgeContainer.innerHTML = `<span class="${badgeClass}">${badgeText}</span>`;
-                display.style.color = colorHex;
+                if(badgeContainer) badgeContainer.innerHTML = `<span class="${badgeClass}">${badgeText}</span>`;
+                if(display) display.style.color = colorHex;
             }
-
-            fetchThingSpeakData();
-            setInterval(fetchThingSpeakData, 15000); 
-
-        } else {
-            document.body.innerHTML = '<div class="container mt-5 text-center text-white"><h1>Error</h1><p>Cámara no encontrada</p><a href="index.html" class="btn btn-light">Volver</a></div>';
-        }
+        });
     </script>
 </body>
 </html>

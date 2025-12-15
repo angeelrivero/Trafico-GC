@@ -102,6 +102,7 @@ function updateUI(session) {
         if(chatContent) chatContent.classList.remove('d-none');
 
         getProfile(session); 
+        checkPremiumStatus(session.user.id);
 
     } else {
         if(loginBtn) loginBtn.classList.remove('d-none');
@@ -111,6 +112,7 @@ function updateUI(session) {
 
         if(userEmailDisplay) userEmailDisplay.textContent = "Usuario";
         
+        document.querySelectorAll('.ad-banner').forEach(el => el.style.display = 'block');
         const navImg = document.querySelector('.nav-avatar');
         if (navImg) {
             navImg.outerHTML = '<i class="fas fa-user-circle"></i>';
@@ -514,4 +516,228 @@ if (chatContainer) {
     });
 
     loadChat();
+}
+
+
+// ---------------------------------------------------------
+// 7. SISTEMA DE SUSCRIPCIONES Y VIP (CORREGIDO)
+// ---------------------------------------------------------
+
+let isUserPremium = false;
+let currentSubscriptions = [];
+
+// Verificar si el usuario es Premium
+async function checkPremiumStatus(userId) {
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('is_premium')
+            .eq('id', userId)
+            .single();
+
+        if (error) {
+            console.error("Error verificando VIP:", error.message);
+            return;
+        }
+
+        if (data && data.is_premium) {
+            isUserPremium = true;
+            
+            // 1. Ocultar Anuncios
+            document.querySelectorAll('.ad-banner').forEach(el => el.style.display = 'none');
+            
+            // 2. Mostrar Badge VIP
+            const vipBadge = document.getElementById('vip-badge');
+            if(vipBadge) vipBadge.classList.remove('d-none');
+            
+            console.log("Usuario identificado como VIP");
+        }
+    } catch (err) {
+        console.error("Error inesperado en VIP:", err);
+    }
+}
+
+// Lógica del botón de suscripción (Solo en detalle.html)
+const btnSubscribe = document.getElementById('btnSubscribe');
+
+if (btnSubscribe) {
+    
+    async function initSubscribeButton() {
+        // 1. Verificar sesión
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+            btnSubscribe.innerHTML = '<i class="fas fa-lock"></i> Inicia sesión para alertar';
+            btnSubscribe.disabled = true;
+            btnSubscribe.className = 'btn btn-secondary'; // Gris si no hay sesión
+            return;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const camIdParam = urlParams.get('id');
+
+        if (!camIdParam) {
+            console.warn("No hay ID de cámara en la URL");
+            return;
+        }
+
+        const camId = parseInt(camIdParam);
+
+        // 2. Obtener suscripciones actuales desde Supabase
+        try {
+            const { data, error } = await supabase
+                .from('subscriptions')
+                .select('camera_id')
+                .eq('user_id', session.user.id);
+
+            if (error) {
+                console.error("Error cargando suscripciones:", error.message);
+                btnSubscribe.innerText = "Error carga";
+                return;
+            }
+
+            if (data) {
+                currentSubscriptions = data.map(sub => sub.camera_id);
+                updateSubscribeButtonUI(camId);
+            }
+        } catch (err) {
+            console.error("Error fatal suscripciones:", err);
+            btnSubscribe.innerText = "Error";
+        }
+    }
+
+    function updateSubscribeButtonUI(camId) {
+        const isSubscribed = currentSubscriptions.includes(camId);
+        
+        // Eliminamos el estado disabled y actualizamos texto
+        btnSubscribe.disabled = false;
+
+        if (isSubscribed) {
+            btnSubscribe.innerHTML = '<i class="fas fa-bell-slash"></i> Desactivar Alerta';
+            btnSubscribe.className = 'btn btn-danger text-white'; 
+        } else {
+            btnSubscribe.innerHTML = '<i class="fas fa-bell"></i> Activar Alerta (> Nvl 7)';
+            btnSubscribe.className = 'btn btn-success text-white'; 
+        }
+    }
+
+    // Evento Click
+    btnSubscribe.addEventListener('click', async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const camId = parseInt(urlParams.get('id'));
+        const isSubscribed = currentSubscriptions.includes(camId);
+
+        // Feedback visual inmediato (loading)
+        const oldText = btnSubscribe.innerHTML;
+        btnSubscribe.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+        btnSubscribe.disabled = true;
+
+        if (isSubscribed) {
+            // --- DESUSCRIBIRSE ---
+            const { error } = await supabase
+                .from('subscriptions')
+                .delete()
+                .match({ user_id: session.user.id, camera_id: camId });
+
+            if (!error) {
+                currentSubscriptions = currentSubscriptions.filter(id => id !== camId);
+                // alert("Alerta desactivada."); // Opcional
+            } else {
+                console.error("Error borrar:", error);
+                alert("Error al desactivar.");
+            }
+        } else {
+            // --- SUSCRIBIRSE ---
+            
+            // Chequeo VIP vs FREE (Límite 2)
+            if (!isUserPremium && currentSubscriptions.length >= 2) {
+                const modalEl = document.getElementById('vipModal');
+                if(modalEl) {
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                } else {
+                    alert("Límite alcanzado. Hazte VIP para más.");
+                }
+                
+                // Restaurar botón
+                updateSubscribeButtonUI(camId);
+                return;
+            }
+
+            const { error } = await supabase
+                .from('subscriptions')
+                .insert({ user_id: session.user.id, camera_id: camId });
+
+            if (!error) {
+                currentSubscriptions.push(camId);
+                alert("¡Alerta activada! Te avisaremos si hay atasco.");
+            } else {
+                console.error("Error insertar:", error);
+                alert("Error al suscribirse: " + error.message);
+            }
+        }
+        updateSubscribeButtonUI(camId);
+    });
+
+    // Iniciar
+    initSubscribeButton();
+}
+
+
+// ---------------------------------------------------------
+// 8. INTEGRACIÓN PAYPAL (En index.html o donde esté el modal)
+// ---------------------------------------------------------
+if (document.getElementById('paypal-button-container')) {
+    
+    paypal.Buttons({
+        style: {
+            layout: 'vertical',
+            color:  'gold',
+            shape:  'rect',
+            label:  'paypal'
+        },
+        createOrder: function(data, actions) {
+            return actions.order.create({
+                purchase_units: [{
+                    description: "Suscripción GrancaCam VIP",
+                    amount: {
+                        value: '4.99'
+                    }
+                }]
+            });
+        },
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(async function(details) {
+                // PAGO EXITOSO
+                alert('¡Pago completado por ' + details.payer.name.given_name + '! Activando VIP...');
+                
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                // Actualizar perfil a PREMIUM en Supabase
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({ is_premium: true })
+                    .eq('id', user.id);
+
+                if (!error) {
+                    location.reload(); // Recargar para aplicar cambios (quitar anuncios, etc)
+                } else {
+                    alert("Hubo un error activando tu cuenta, contáctanos.");
+                }
+            });
+        }
+    }).render('#paypal-button-container');
+}
+
+// Listener para abrir modal VIP desde el Navbar
+const btnVipNav = document.querySelector('.btn-vip');
+if(btnVipNav) {
+    btnVipNav.addEventListener('click', (e) => {
+        e.preventDefault();
+        const modal = new bootstrap.Modal(document.getElementById('vipModal'));
+        modal.show();
+    });
 }
