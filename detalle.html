@@ -27,7 +27,6 @@
             background: #16213e;
         }
 
-        /* Animación suave para cuando cambia el número */
         .fade-change {
             transition: color 0.5s ease;
         }
@@ -123,24 +122,26 @@
 
     <script>
         // ----------------------------------------------------
-        // 1. CONFIGURACIÓN DE TUS CÁMARAS Y THINGSPEAK
+        // 1. CONFIGURACIÓN
         // ----------------------------------------------------
         
         const camerasData = [
-            // He quitado el ID de Telde (puesto a 000000) porque dijiste "solo en la ballena"
             { id: 1, name: "GC1 Telde", videoId: "KmcLujr7PU0", tsChannel: "000000", tsField: "1" },
             { id: 2, name: "GC1 Jinamar", videoId: "2vDowXZy9cc", tsChannel: "000000", tsField: "1" },
             { id: 3, name: "GC2 Arucas", videoId: "z1E5ciDe3a0", tsChannel: "000000", tsField: "1" },
             { id: 4, name: "GC2 Bañaderos", videoId: "XGzncIaJJ44", tsChannel: "000000", tsField: "1" },
             { id: 5, name: "Mesa y López", videoId: "gfsJIcCZzlI", tsChannel: "000000", tsField: "1" },
             
-            // AQUÍ ESTÁ LA BALLENA CON TU ID CONFIGURADO
+            // --- LA BALLENA (Configurada) ---
             { 
                 id: 6, 
                 name: "La Ballena", 
                 videoId: "ZVgz2e-wMR4", 
-                tsChannel: "3199441", // <--- ID ASIGNADO AQUÍ
-                tsField: "1" 
+                tsChannel: "3199441", 
+                tsField: "1",
+                // ¡IMPORTANTE! Si tu canal es privado, pon aquí tu 'Read API Key' entre comillas.
+                // Si es público, déjalo vacío como "".
+                readKey: "Q1XCOL5COQL3D5QB" 
             },
             
             { id: 7, name: "Siete Palmas", videoId: "eMbMc7VnI5Q", tsChannel: "000000", tsField: "1" },
@@ -155,12 +156,10 @@
         const camera = camerasData.find(c => c.id === camId);
 
         if (camera) {
-            // Configurar Título y Video
             document.title = `${camera.name} | Live`;
             document.getElementById('cameraTitle').innerText = camera.name;
             document.getElementById('ts-channel').innerText = camera.tsChannel;
 
-            // Inyectar Video Muteado
             const iframe = `
                 <iframe 
                     src="https://www.youtube.com/embed/${camera.videoId}?autoplay=1&mute=1&rel=0&playsinline=1" 
@@ -174,78 +173,84 @@
             document.getElementById('videoContainer').innerHTML = iframe;
 
             // ----------------------------------------------------
-            // 3. LÓGICA DE THINGSPEAK (FETCH DATA)
+            // 3. CONEXIÓN A THINGSPEAK
             // ----------------------------------------------------
             
             async function fetchThingSpeakData() {
-                // Si no hay ID configurado, no hacemos nada
                 if(camera.tsChannel === "000000") {
-                    updateUI(0); // Valor por defecto si no hay canal real
+                    updateUI(0);
                     return; 
                 }
 
                 try {
-                    // URL de la API de ThingSpeak para obtener el ÚLTIMO dato
-                    const url = `https://api.thingspeak.com/channels/${camera.tsChannel}/feeds/last.json`;
-                    
-                    const response = await fetch(url);
-                    const data = await response.json();
+                    // Construimos la URL. Si hay readKey, la añadimos.
+                    let url = `https://api.thingspeak.com/channels/${camera.tsChannel}/feeds/last.json`;
+                    if (camera.readKey && camera.readKey !== "") {
+                        url += `?api_key=${camera.readKey}`;
+                    }
 
-                    // Obtenemos el valor del campo configurado (ej: field1)
+                    console.log("Solicitando datos a:", url); // Para depurar en consola (F12)
+
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+
+                    const data = await response.json();
+                    
+                    // Verificamos qué llega en consola
+                    console.log("Datos recibidos de ThingSpeak:", data);
+
                     const fieldValue = data[`field${camera.tsField}`];
                     
-                    // Convertimos a entero (o float si lo prefieres)
-                    const trafficLevel = parseInt(fieldValue) || 0; 
+                    // Si el valor es null (canal vacío), ponemos 0
+                    if (fieldValue === null || fieldValue === undefined) {
+                        console.warn("El campo está vacío. ¿Has enviado datos al canal?");
+                        updateUI(0);
+                        return;
+                    }
 
-                    // Actualizamos la pantalla
+                    const trafficLevel = parseInt(fieldValue); 
                     updateUI(trafficLevel);
 
                 } catch (error) {
                     console.error("Error conectando a ThingSpeak:", error);
-                    document.getElementById('status-badge').innerHTML = '<span class="badge bg-secondary">Sin señal IoT</span>';
+                    document.getElementById('status-badge').innerHTML = '<span class="badge bg-danger">Error Conexión</span>';
                 }
             }
 
-            // Función para actualizar colores y textos
             function updateUI(level) {
                 const display = document.getElementById('currentLevelDisplay');
                 const badgeContainer = document.querySelector('#status-badge');
                 
-                // Actualizar número
                 display.innerText = level;
 
-                // Actualizar hora
                 const now = new Date();
                 document.getElementById('lastUpdate').innerText = now.toLocaleTimeString();
 
-                // Lógica de colores (Semáforo)
                 let badgeClass = '';
                 let badgeText = '';
                 let colorHex = '';
 
+                // Lógica visual
                 if (level <= 2) {
                     badgeClass = 'badge bg-success p-2 w-100 fs-6';
                     badgeText = 'TRÁFICO FLUIDO';
-                    colorHex = '#28a745'; // Verde
+                    colorHex = '#28a745'; 
                 } else if (level <= 6) {
                     badgeClass = 'badge bg-warning text-dark p-2 w-100 fs-6';
                     badgeText = 'TRÁFICO DENSO';
-                    colorHex = '#ffc107'; // Amarillo
+                    colorHex = '#ffc107'; 
                 } else {
                     badgeClass = 'badge bg-danger p-2 w-100 fs-6';
                     badgeText = 'RETENCIONES';
-                    colorHex = '#dc3545'; // Rojo
+                    colorHex = '#dc3545'; 
                 }
 
-                // Aplicar cambios
                 badgeContainer.innerHTML = `<span class="${badgeClass}">${badgeText}</span>`;
                 display.style.color = colorHex;
             }
 
-            // LLAMADA INICIAL
             fetchThingSpeakData();
-
-            // ACTUALIZACIÓN AUTOMÁTICA (Cada 15 segundos)
             setInterval(fetchThingSpeakData, 15000); 
 
         } else {
