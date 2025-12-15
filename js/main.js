@@ -189,7 +189,7 @@ const trafficSegments = [
 ];
 
 // ---------------------------------------------------------
-// 2. GENERADOR DE GRID DE CÁMARAS
+// 2. GENERADOR DE GRID DE CÁMARAS (MODIFICADO)
 // ---------------------------------------------------------
 const container = document.getElementById('cameras-container');
 
@@ -199,28 +199,31 @@ camerasData.forEach(cam => {
     if (cam.level >= 7) barColor = 'bg-danger';
     if (cam.level == 10) barColor = 'bg-dark';
 
+    // CAMBIO: Ahora envolvemos todo en un <a> que lleva a detalle.html
     const html = `
         <div class="col-12 col-md-6 col-lg-3"> 
-            <div class="camera-card h-100"> 
-                <div class="card-header">
-                    <span>${cam.name}</span> <span class="badge ${barColor}">${cam.level}/10</span>
-                </div>
-                <div class="iframe-container">
-                    <iframe 
-                        src="https://www.youtube.com/embed/${cam.videoId}?autoplay=1&mute=1&playsinline=1&rel=0" 
-                        title="Cámara Tráfico"
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen>
-                    </iframe>
-                </div>
-                <div class="traffic-stats text-center">
-                    <div class="progress" style="height: 6px; background: #333;">
-                        <div class="progress-bar ${barColor}" role="progressbar" style="width: ${cam.level * 10}%"></div>
+            <a href="detalle.html?id=${cam.id}" class="camera-card-link">
+                <div class="camera-card h-100"> 
+                    <div class="card-header">
+                        <span>${cam.name}</span> <span class="badge ${barColor}">${cam.level}/10</span>
                     </div>
-                    <small class="text-muted mt-1 d-block" style="font-size:10px;">Live Data: ThingSpeak</small>
+                    <div class="iframe-container">
+                        <iframe 
+                            src="https://www.youtube.com/embed/${cam.videoId}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0" 
+                            title="Cámara Tráfico"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="traffic-stats text-center">
+                        <div class="progress" style="height: 6px; background: #333;">
+                            <div class="progress-bar ${barColor}" role="progressbar" style="width: ${cam.level * 10}%"></div>
+                        </div>
+                        <small class="text-muted mt-1 d-block" style="font-size:10px;">Click para ver estadísticas detalladas</small>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
     `;
     container.innerHTML += html;

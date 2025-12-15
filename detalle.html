@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle Cámara - Tráfico GC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body {
+            overflow-x: hidden;
+            background-color: #1a1a2e;
+        }
+        
+        .video-card {
+            border: 1px solid #333;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            background-color: #000;
+            overflow: hidden;
+        }
+        
+        .stats-card {
+            height: 100%;
+            border-left: 1px solid #333;
+            background: #16213e;
+        }
+
+        /* Animación suave para cuando cambia el número */
+        .fade-change {
+            transition: color 0.5s ease;
+        }
+
+        @media (min-width: 1400px) {
+            .container-fluid {
+                padding-left: 30px;
+                padding-right: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark border-bottom border-secondary mb-3">
+        <div class="container-fluid">
+            <a class="btn btn-outline-light btn-sm" href="index.html">
+                <i class="fas fa-arrow-left"></i> Volver al Mapa
+            </a>
+            <span class="navbar-text text-light mx-auto fw-bold text-uppercase" id="cameraTitle" style="font-size: 1.2rem;">
+                Cargando...
+            </span>
+            <div style="width: 100px;"></div> 
+        </div>
+    </nav>
+
+    <div class="container-fluid px-3">
+        <div class="row g-3">
+            
+            <div class="col-lg-9 col-xl-10">
+                <div class="card video-card text-light">
+                    <div class="card-body p-0">
+                        <div id="videoContainer" class="ratio ratio-16x9">
+                            <div class="d-flex justify-content-center align-items-center h-100 text-muted">
+                                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-xl-2">
+                <div class="card stats-card text-light border-secondary">
+                    <div class="card-header border-secondary bg-opacity-10 bg-info">
+                        <h6 class="mb-0 text-center"><i class="fas fa-satellite-dish text-success"></i> ThingSpeak Live</h6>
+                    </div>
+                    <div class="card-body d-flex flex-column gap-3">
+                        
+                        <div class="alert alert-dark border-secondary text-center m-0">
+                            <small class="text-muted d-block mb-1">Nivel Actual</small>
+                            <h1 class="display-4 fw-bold mb-0 fade-change" id="currentLevelDisplay">--</h1>
+                            <small class="text-secondary">Escala 0-10</small>
+                        </div>
+
+                        <div id="status-badge" class="text-center">
+                            <span class="badge bg-secondary p-2 w-100 fs-6">Conectando...</span>
+                        </div>
+
+                        <hr class="border-secondary m-0">
+
+                        <div class="text-center">
+                            <small class="text-muted" style="font-size: 10px;">ID Canal: <span id="ts-channel">--</span></small>
+                        </div>
+
+                        <div id="thingspeak-placeholder" class="flex-grow-1 d-flex flex-column justify-content-end">
+                             <div style="height: 150px; background: rgba(0,0,0,0.3); border-radius: 5px; border: 1px dashed #555; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                <i class="fas fa-chart-line fa-2x text-muted mb-2"></i>
+                                <span class="text-muted small text-center px-2">Gráfica Histórica</span>
+                            </div>
+                            <p class="text-center text-muted mt-2 mb-0" style="font-size: 0.75rem;">
+                                Actualizado: <span id="lastUpdate">--:--:--</span>
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="p-3 rounded" style="background-color: rgba(255,255,255,0.05);">
+                    <h5><i class="fas fa-info-circle text-info"></i> Información del Tramo</h5>
+                    <p class="text-secondary mb-0">Los datos se actualizan cada 15 segundos directamente desde los sensores IoT conectados a ThingSpeak.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ----------------------------------------------------
+        // 1. CONFIGURACIÓN DE TUS CÁMARAS Y THINGSPEAK
+        // ----------------------------------------------------
+        // IMPORTANTE: Aquí debes poner el 'channelId' y el 'field' correcto para cada cámara.
+        // 'field1' suele ser el primer dato que envías.
+        
+        const camerasData = [
+            { 
+                id: 1, 
+                name: "GC1 Telde", 
+                videoId: "KmcLujr7PU0", 
+                tsChannel: "3199441", // <--- PON TU ID DE CANAL REAL AQUÍ
+                tsField: "1"         // <--- QUÉ FIELD USAS (1, 2, 3...)
+            },
+            { id: 2, name: "GC1 Jinamar", videoId: "2vDowXZy9cc", tsChannel: "000000", tsField: "1" },
+            { id: 3, name: "GC2 Arucas", videoId: "z1E5ciDe3a0", tsChannel: "000000", tsField: "1" },
+            { id: 4, name: "GC2 Bañaderos", videoId: "XGzncIaJJ44", tsChannel: "000000", tsField: "1" },
+            { id: 5, name: "Mesa y López", videoId: "gfsJIcCZzlI", tsChannel: "000000", tsField: "1" },
+            { id: 6, name: "La Ballena", videoId: "ZVgz2e-wMR4", tsChannel: "000000", tsField: "1" },
+            { id: 7, name: "Siete Palmas", videoId: "eMbMc7VnI5Q", tsChannel: "000000", tsField: "1" },
+            { id: 8, name: "Maspalomas Sur", videoId: "xrYXDI5uAoA", tsChannel: "000000", tsField: "1" }
+        ];
+
+        // ----------------------------------------------------
+        // 2. INICIALIZACIÓN
+        // ----------------------------------------------------
+        const urlParams = new URLSearchParams(window.location.search);
+        const camId = parseInt(urlParams.get('id'));
+        const camera = camerasData.find(c => c.id === camId);
+
+        if (camera) {
+            // Configurar Título y Video
+            document.title = `${camera.name} | Live`;
+            document.getElementById('cameraTitle').innerText = camera.name;
+            document.getElementById('ts-channel').innerText = camera.tsChannel;
+
+            // Inyectar Video Muteado
+            const iframe = `
+                <iframe 
+                    src="https://www.youtube.com/embed/${camera.videoId}?autoplay=1&mute=1&rel=0&playsinline=1" 
+                    title="Cámara Tráfico"
+                    class="w-100 h-100"
+                    style="border:0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+            `;
+            document.getElementById('videoContainer').innerHTML = iframe;
+
+            // ----------------------------------------------------
+            // 3. LÓGICA DE THINGSPEAK (FETCH DATA)
+            // ----------------------------------------------------
+            
+            async function fetchThingSpeakData() {
+                // Si no hay ID configurado, no hacemos nada
+                if(camera.tsChannel === "000000") {
+                    updateUI(0); // Valor por defecto si no hay canal real
+                    return; 
+                }
+
+                try {
+                    // URL de la API de ThingSpeak para obtener el ÚLTIMO dato
+                    const url = `https://api.thingspeak.com/channels/${camera.tsChannel}/feeds/last.json`;
+                    
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    // Obtenemos el valor del campo configurado (ej: field1)
+                    const fieldValue = data[`field${camera.tsField}`];
+                    
+                    // Convertimos a entero (o float si lo prefieres)
+                    const trafficLevel = parseInt(fieldValue) || 0; 
+
+                    // Actualizamos la pantalla
+                    updateUI(trafficLevel);
+
+                } catch (error) {
+                    console.error("Error conectando a ThingSpeak:", error);
+                    document.getElementById('status-badge').innerHTML = '<span class="badge bg-secondary">Sin señal IoT</span>';
+                }
+            }
+
+            // Función para actualizar colores y textos
+            function updateUI(level) {
+                const display = document.getElementById('currentLevelDisplay');
+                const badgeContainer = document.querySelector('#status-badge');
+                
+                // Actualizar número
+                display.innerText = level;
+
+                // Actualizar hora
+                const now = new Date();
+                document.getElementById('lastUpdate').innerText = now.toLocaleTimeString();
+
+                // Lógica de colores (Semáforo)
+                let badgeClass = '';
+                let badgeText = '';
+                let colorHex = '';
+
+                if (level <= 2) {
+                    badgeClass = 'badge bg-success p-2 w-100 fs-6';
+                    badgeText = 'TRÁFICO FLUIDO';
+                    colorHex = '#28a745'; // Verde
+                } else if (level <= 6) {
+                    badgeClass = 'badge bg-warning text-dark p-2 w-100 fs-6';
+                    badgeText = 'TRÁFICO DENSO';
+                    colorHex = '#ffc107'; // Amarillo
+                } else {
+                    badgeClass = 'badge bg-danger p-2 w-100 fs-6';
+                    badgeText = 'RETENCIONES';
+                    colorHex = '#dc3545'; // Rojo
+                }
+
+                // Aplicar cambios
+                badgeContainer.innerHTML = `<span class="${badgeClass}">${badgeText}</span>`;
+                display.style.color = colorHex;
+            }
+
+            // LLAMADA INICIAL
+            fetchThingSpeakData();
+
+            // ACTUALIZACIÓN AUTOMÁTICA (Cada 15 segundos)
+            setInterval(fetchThingSpeakData, 15000); 
+
+        } else {
+            document.body.innerHTML = '<div class="container mt-5 text-center text-white"><h1>Error</h1><p>Cámara no encontrada</p><a href="index.html" class="btn btn-light">Volver</a></div>';
+        }
+    </script>
+</body>
+</html>

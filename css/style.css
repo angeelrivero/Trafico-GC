@@ -169,3 +169,22 @@ body {
     color: #888;
     float: right;
 }
+
+
+/* Efecto hover para las tarjetas clickeables */
+.camera-card-link {
+    text-decoration: none; /* Quitar subrayado del enlace */
+    color: inherit; /* Mantener colores de texto */
+    display: block;
+    height: 100%;
+    transition: transform 0.2s;
+}
+
+.camera-card-link:hover {
+    transform: translateY(-5px); /* Efecto de elevación al pasar el ratón */
+}
+
+/* IMPORTANTE: Esto permite hacer click "a través" del video en la vista previa */
+.camera-card-link .iframe-container iframe {
+    pointer-events: none;
+}
