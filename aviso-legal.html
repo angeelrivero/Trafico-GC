@@ -3,11 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aviso Legal - GrancaCam</title>
+    <title>Legales - GrancaCam</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        /* Estilos específicos para las pestañas en modo oscuro */
+        .nav-tabs .nav-link {
+            color: #bbbbbb;
+            border: 1px solid transparent;
+        }
+        .nav-tabs .nav-link:hover {
+            color: #FFCC00; /* Amarillo Canario */
+            border-color: #333;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #242424; /* Mismo gris que la tarjeta */
+            color: #FFCC00;
+            border-color: #444 #444 #242424;
+            font-weight: bold;
+        }
+        .nav-tabs {
+            border-bottom: 1px solid #444;
+        }
+        .tab-content {
+            padding-top: 20px;
+        }
+        h4 { margin-top: 1.5rem; color: #0071BC; /* Azul Atlántico */ }
+    </style>
 </head>
 <body style="background-color: #181818 !important; color: #f4f4f4 !important;">
 
@@ -26,42 +51,83 @@
     <div class="container mb-5">
         <div class="card p-4" style="background-color: #242424; color: #f4f4f4; border: 1px solid #444;">
             
-            <h2 class="text-center mb-4" style="color: #FFCC00;">AVISO LEGAL Y CONDICIONES GENERALES DE USO</h2>
+            <h2 class="text-center mb-4" style="color: #FFCC00;">TEXTOS LEGALES Y PROTECCIÓN DE DATOS</h2>
             
-            <div class="alert alert-info bg-opacity-10 border-info">
-                <small style="color: #ccc;">Última actualización: 15/12/2025</small>
-            </div>
+            <ul class="nav nav-tabs" id="legalTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="aviso-tab" data-bs-toggle="tab" data-bs-target="#aviso" type="button" role="tab">Aviso Legal</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="privacidad-tab" data-bs-toggle="tab" data-bs-target="#privacidad" type="button" role="tab">Política de Privacidad</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="cookies-tab" data-bs-toggle="tab" data-bs-target="#cookies" type="button" role="tab">Política de Cookies</button>
+                </li>
+            </ul>
 
-            <div class="legal-content">
+            <div class="tab-content" id="legalTabsContent">
                 
-                <h4 class="mt-4 text-info">I. INFORMACIÓN GENERAL</h4>
-                <p>En cumplimiento con el deber de información dispuesto en la Ley 34/2002 de Servicios de la Sociedad de la Información y el Comercio Electrónico (LSSI-CE) de 11 de julio, se facilitan a continuación los siguientes datos de información general de este sitio web:</p>
-                <p>La titularidad de este sitio web, <strong>https://angeelrivero.github.io/Trafico-GC/</strong>, la ostenta: <strong>Angel Rivero Medina & Isaac Vera Galvan</strong>.</p>
-                <ul>
-                    <li><strong>NIF:</strong> 45777394B & 45779970B</li>
-                    <li><strong>Dirección:</strong> Gran Canaria</li>
-                    <li><strong>Teléfonos de contacto:</strong> 605312891 & 663210032</li>
-                    <li><strong>Email de contacto:</strong> 
-                        <a href="mailto:angel.rivero104@alu.ulpgc.es" style="color: #FFCC00;">angel.rivero104@alu.ulpgc.es</a> & 
-                        <a href="mailto:isaac.vera102@alu.ulpgc.es" style="color: #FFCC00;">isaac.vera102@alu.ulpgc.es</a>
-                    </li>
-                </ul>
+                <div class="tab-pane fade show active" id="aviso" role="tabpanel">
+                    <div class="legal-content">
+                        <h4>I. INFORMACIÓN GENERAL</h4>
+                        <p>En cumplimiento con el deber de información dispuesto en la Ley 34/2002 de Servicios de la Sociedad de la Información y el Comercio Electrónico (LSSI-CE) de 11 de julio, se facilitan a continuación los siguientes datos de información general de este sitio web:</p>
+                        <p>La titularidad de este sitio web, <strong>https://angeelrivero.github.io/Trafico-GC/</strong>, la ostenta: <strong>Angel Rivero Medina & Isaac Vera Galvan</strong>.</p>
+                        <ul>
+                            <li><strong>NIF:</strong> 45777394B & 45779970B</li>
+                            <li><strong>Dirección:</strong> Gran Canaria</li>
+                            <li><strong>Teléfonos:</strong> 605312891 & 663210032</li>
+                            <li><strong>Email:</strong> <a href="mailto:angel.rivero104@alu.ulpgc.es" class="text-warning">angel.rivero104@alu.ulpgc.es</a> & <a href="mailto:isaac.vera102@alu.ulpgc.es" class="text-warning">isaac.vera102@alu.ulpgc.es</a></li>
+                        </ul>
 
-                <h4 class="mt-4 text-info">II. TÉRMINOS Y CONDICIONES GENERALES DE USO</h4>
-                <p>El objeto de las presentes Condiciones es regular el acceso y la utilización del Sitio Web. El acceso al Sitio Web por el Usuario tiene carácter libre y, por regla general, es gratuito.</p>
-                <p>El Usuario asume su responsabilidad para realizar un uso correcto del Sitio Web. GrancaCam se reserva el derecho de retirar todos aquellos comentarios y aportaciones que vulneren la ley, el respeto a la dignidad de la persona, que sean discriminatorios, xenófobos, racistas, pornográficos, spamming, que atenten contra la juventud o la infancia, el orden o la seguridad pública.</p>
+                        <h4>II. TÉRMINOS Y CONDICIONES</h4>
+                        <p>El objeto de las presentes Condiciones es regular el acceso y la utilización del Sitio Web. El acceso al Sitio Web por el Usuario tiene carácter libre y, por regla general, es gratuito. El Usuario asume su responsabilidad para realizar un uso correcto del Sitio Web.</p>
 
-                <h4 class="mt-4 text-info">III. EXCLUSIÓN DE GARANTÍAS Y RESPONSABILIDAD</h4>
-                <p>GrancaCam no garantiza la continuidad, disponibilidad y utilidad del Sitio Web, ni de los Contenidos o Servicios. GrancaCam hará todo lo posible por el buen funcionamiento del Sitio Web, sin embargo, no se responsabiliza ni garantiza que el acceso a este Sitio Web no vaya a ser ininterrumpido o que esté libre de error.</p>
+                        <h4>III. PROPIEDAD INTELECTUAL</h4>
+                        <p>GrancaCam es titular de todos los derechos de propiedad intelectual e industrial del Sitio Web. Quedan expresamente prohibidas la reproducción, la distribución y la comunicación pública sin autorización.</p>
+                    </div>
+                </div>
 
-                <h4 class="mt-4 text-info">IV. POLÍTICA DE ENLACES</h4>
-                <p>El Sitio Web de GrancaCam puede poner a disposición de los Usuarios medios de enlace (links, banners, botones) que permiten acceder a sitios web pertenecientes y/o gestionados por terceros. La instalación de estos enlaces tiene por objeto facilitar a los Usuarios la búsqueda de y acceso a la información disponible en Internet.</p>
+                <div class="tab-pane fade" id="privacidad" role="tabpanel">
+                    <div class="legal-content">
+                        <p class="small text-muted">Última actualización: 16/12/2025</p>
+                        
+                        <h4>1. Responsable del Tratamiento</h4>
+                        <p>El responsable del tratamiento de los datos personales es <strong>Angel Rivero Medina & Isaac Vera Galvan</strong> (en adelante, Trafico de la isla de Gran Canaria). Sus datos de contacto son los mismos indicados en el Aviso Legal.</p>
 
-                <h4 class="mt-4 text-info">V. PROPIEDAD INTELECTUAL E INDUSTRIAL</h4>
-                <p>GrancaCam es titular de todos los derechos de propiedad intelectual e industrial del Sitio Web. Todos los derechos reservados. Quedan expresamente prohibidas la reproducción, la distribución y la comunicación pública de la totalidad o parte de los contenidos de esta página web, con fines comerciales, en cualquier soporte y por cualquier medio técnico, sin la autorización de GrancaCam.</p>
+                        <h4>2. Principios y Base Legal</h4>
+                        <p>Esta política respeta el RGPD (UE) 2016/679 y la LOPD-GDD 3/2018. El tratamiento de los datos personales se basa en el <strong>consentimiento</strong> del Usuario, el cual podrá retirar en cualquier momento.</p>
 
-                <h4 class="mt-4 text-info">VI. ACCIONES LEGALES Y JURISDICCIÓN</h4>
-                <p>GrancaCam se reserva la facultad de presentar las acciones civiles o penales que considere necesarias por la utilización indebida del Sitio Web y Contenidos. La relación entre el Usuario y GrancaCam se regirá por la normativa vigente y de aplicación en el territorio español.</p>
+                        <h4>3. Finalidad del tratamiento</h4>
+                        <p>Los datos son recabados para facilitar la gestión entre el Sitio Web y el Usuario, atender consultas y con finalidades estadísticas o de personalización para mejorar el contenido ofertado.</p>
+
+                        <h4>4. Periodo de Conservación</h4>
+                        <p>Los datos personales solo serán retenidos durante el tiempo mínimo necesario y, en todo caso, únicamente durante el plazo de <strong>18 meses</strong>, o hasta que el Usuario solicite su supresión.</p>
+
+                        <h4>5. Derechos del Usuario</h4>
+                        <p>El Usuario puede ejercer sus derechos de acceso, rectificación, supresión ("derecho al olvido"), limitación, portabilidad y oposición mediante comunicación escrita a los emails de contacto facilitados.</p>
+                        <p>En caso de considerar vulnerados sus derechos, puede presentar una reclamación ante la Agencia Española de Protección de Datos (AEPD).</p>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="cookies" role="tabpanel">
+                    <div class="legal-content">
+                        <h4>1. ¿Qué son las Cookies?</h4>
+                        <p>Las cookies son pequeñas cantidades de información que se almacenan en el navegador para que el servidor recuerde cierta información que facilitará la navegación. No dañan el dispositivo ni extraen información del disco duro.</p>
+
+                        <h4>2. Cookies Propias</h4>
+                        <p>Son aquellas gestionadas exclusivamente por Trafico en la isla de Gran Canaria para el mejor funcionamiento del sitio. Permiten reconocer al Usuario como visitante recurrente y adaptar el contenido.</p>
+
+                        <h4>3. Cookies de Terceros</h4>
+                        <p>Son utilizadas y gestionadas por entidades externas (como Google o Redes Sociales) para obtener estadísticas de acceso y analizar la navegación de forma anónima.</p>
+                        <ul>
+                            <li>Google Analytics / Services: <a href="https://policies.google.com/technologies/cookies" target="_blank" class="text-muted">Política de Cookies</a></li>
+                            <li>Redes Sociales (Twitter, YouTube, Instagram): Disponen de sus propias políticas de privacidad.</li>
+                        </ul>
+
+                        <h4>4. Deshabilitar Cookies</h4>
+                        <p>El Usuario puede deshabilitar, rechazar y eliminar las cookies instaladas en su dispositivo mediante la configuración de su navegador (Chrome, Firefox, Safari, etc.).</p>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -76,32 +142,24 @@
                         GrancaCam
                     </h5>
                     <p class="small">Monitorización de tráfico en tiempo real en Gran Canaria mediante cámaras DGT y sensores IoT.</p>
-                    <div class="mt-3">
-                        <a href="#" class="text-light me-3"><i class="fab fa-github fa-lg"></i></a>
-                        <a href="#" class="text-light me-3"><i class="fab fa-twitter fa-lg"></i></a>
-                        <a href="#" class="text-light"><i class="fab fa-instagram fa-lg"></i></a>
-                    </div>
                 </div>
                 <div class="col-lg-4 col-md-6 mb-4">
                     <h5>Enlaces Útiles</h5>
                     <ul class="footer-links">
-                        <li><a href="index.html"><i class="fas fa-chevron-right text-muted me-2" style="font-size: 0.7rem;"></i> Inicio</a></li>
-                        <li><a href="index.html#googleMap"><i class="fas fa-chevron-right text-muted me-2" style="font-size: 0.7rem;"></i> Mapa de Tráfico</a></li>
-                        <li><a href="aviso-legal.html"><i class="fas fa-chevron-right text-muted me-2" style="font-size: 0.7rem;"></i> Aviso Legal y Condiciones</a></li>
+                        <li><a href="index.html">Inicio</a></li>
+                        <li><a href="#" onclick="document.getElementById('aviso-tab').click()">Aviso Legal</a></li>
+                        <li><a href="#" onclick="document.getElementById('privacidad-tab').click()">Política de Privacidad</a></li>
+                        <li><a href="#" onclick="document.getElementById('cookies-tab').click()">Política de Cookies</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-4 col-md-12 mb-4">
                     <h5>Contacto</h5>
-                    <p class="small mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i> Gran Canaria, España</p>
-                    
-                    <p class="small mb-2"><i class="fas fa-envelope text-danger me-2"></i> <a href="mailto:angel.rivero104@alu.ulpgc.es" class="text-decoration-none">angel.rivero104@alu.ulpgc.es</a></p>
-                    <p class="small mb-2"><i class="fas fa-envelope text-danger me-2"></i> <a href="mailto:isaac.vera102@alu.ulpgc.es" class="text-decoration-none">isaac.vera102@alu.ulpgc.es</a></p>
+                    <p class="small mb-2"><i class="fas fa-envelope text-danger me-2"></i> angel.rivero104@alu.ulpgc.es</p>
                 </div>
             </div>
             <div class="footer-bottom">
                 <div class="row">
-                    <div class="col-md-6 text-md-start">&copy; 2025 GrancaCam. Todos los derechos reservados.</div>
-                    <div class="col-md-6 text-md-end mt-2 mt-md-0"><span class="text-muted">Desarrollado por A. Rivero & I. Vera</span></div>
+                    <div class="col-12 text-center">&copy; 2025 GrancaCam.</div>
                 </div>
             </div>
         </div>
