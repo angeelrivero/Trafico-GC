@@ -232,6 +232,21 @@
                             <label class="form-label">Sitio Web (Opcional)</label>
                             <input type="text" id="profileWebsite" class="form-control" placeholder="https://...">
                         </div>
+
+                        <div class="mb-3 p-2 rounded" style="border: 1px dashed #555; background: rgba(0,0,0,0.2);">
+                            <label class="form-label text-info"><i class="fab fa-telegram"></i> Telegram ID (Opcional)</label>
+                            <div class="input-group mb-1">
+                                <input type="text" id="profileTelegram" class="form-control" placeholder="Ej: 123456789">
+                                <a href="https://t.me/userinfobot" target="_blank" class="btn btn-secondary" title="Obtener mi ID">
+                                    <i class="fas fa-question-circle"></i> ID
+                                </a>
+                            </div>
+                            <div class="form-text text-warning small" style="font-size: 0.8rem;">
+                                <i class="fas fa-exclamation-triangle"></i> <strong>Importante:</strong> Solo rellena esto si quieres recibir alertas al móvil.
+                                <br>1. Obtén tu ID en <a href="https://t.me/userinfobot" target="_blank" class="text-light">@userinfobot</a>.
+                                <br>2. Dale a "Iniciar" a nuestro bot: <a href="#" class="text-light">@GrancaCam_TrafficBot</a>.
+                            </div>
+                        </div>
                         <button type="submit" class="btn btn-success w-100" id="saveProfileBtn">
                             <span id="saveSpinner" class="spinner-border spinner-border-sm d-none"></span>
                             Guardar Cambios

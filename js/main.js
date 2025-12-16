@@ -125,15 +125,14 @@ function updateUI(session) {
         
         // --- AQUÍ RESTAURAMOS LOS ANUNCIOS SI CIERRA SESIÓN ---
         document.querySelectorAll('.ad-banner').forEach(el => el.style.display = 'block');
-        document.querySelectorAll('.ad-label').forEach(el => el.style.display = 'block'); // Restaurar texto
-        document.querySelectorAll('.ad-container-detail').forEach(el => el.style.display = 'block'); // Restaurar contenedor
+        document.querySelectorAll('.ad-label').forEach(el => el.style.display = 'block'); 
+        document.querySelectorAll('.ad-container-detail').forEach(el => el.style.display = 'block'); 
         
         const navImg = document.querySelector('.nav-avatar');
         if (navImg) {
             navImg.outerHTML = '<i class="fas fa-user-circle"></i>';
         }
         
-        // Ocultar badge VIP si cierra sesión
         const vipBadge = document.getElementById('vip-badge');
         if(vipBadge) vipBadge.classList.add('d-none');
     }
@@ -288,55 +287,16 @@ window.initMap = function() {
         zoom: 11,
         center: granCanaria,
         styles: darkStyle,
-        disableDefaultUI: true // Mantiene el mapa limpio
+        disableDefaultUI: true 
     });
 
-    // ==============================================================
-    // AQUI ESTA LA MAGIA: ACTIVAR CAPA DE TRÁFICO REAL DE GOOGLE
-    // ==============================================================
+    // ACTIVAR CAPA DE TRÁFICO REAL
     const trafficLayer = new google.maps.TrafficLayer();
     trafficLayer.setMap(map);
-
-    // NOTA: He comentado (desactivado) el código de abajo que pintaba
-    // las líneas manuales (trafficSegments) para que no tapen el
-    // tráfico real de Google. Si quieres usar tus líneas personalizadas
-    // otra vez, solo tienes que descomentar este bloque.
-
-    /* const directionsService = new google.maps.DirectionsService();
-
-    function getColorByLevel(level) {
-        if (level <= 2) return "#00FF00"; 
-        if (level <= 6) return "#FFCC00"; 
-        if (level <= 9) return "#FF0000"; 
-        return "#FFFFFF"; 
-    }
-
-    trafficSegments.forEach(segment => {
-        const request = {
-            origin: segment.origin,
-            destination: segment.destination,
-            travelMode: 'DRIVING'
-        };
-
-        directionsService.route(request, function (result, status) {
-            if (status == 'OK') {
-                const exactPath = result.routes[0].overview_path;
-                const trafficPolyline = new google.maps.Polyline({
-                    path: exactPath,
-                    geodesic: true,
-                    strokeColor: getColorByLevel(segment.level),
-                    strokeOpacity: 1.0, 
-                    strokeWeight: 5
-                });
-                trafficPolyline.setMap(map);
-            }
-        });
-    });
-    */
 }
 
 // ---------------------------------------------------------
-// 5. GESTIÓN DE PERFIL
+// 5. GESTIÓN DE PERFIL (MODIFICADO PARA TELEGRAM)
 // ---------------------------------------------------------
 
 async function getProfile(session) {
@@ -356,9 +316,10 @@ async function getProfile(session) {
         }).eq('id', user.id);
     }
     
+    // AQUI: Añadimos 'telegram_chat_id' a la petición
     const { data, error } = await supabase
         .from('profiles')
-        .select(`username, website, avatar_url`)
+        .select(`username, website, avatar_url, telegram_chat_id`) 
         .eq('id', user.id)
         .single();
 
@@ -368,8 +329,12 @@ async function getProfile(session) {
 
         const usernameInput = document.getElementById('profileUsername');
         const websiteInput = document.getElementById('profileWebsite');
+        const telegramInput = document.getElementById('profileTelegram'); // Nuevo
+
         if(usernameInput) usernameInput.value = data.username || '';
         if(websiteInput) websiteInput.value = data.website || '';
+        // Cargar el Telegram ID si existe
+        if(telegramInput) telegramInput.value = data.telegram_chat_id || '';
         
         if (data.avatar_url) {
             downloadImage(data.avatar_url);
@@ -406,7 +371,7 @@ async function downloadImage(path) {
     }
 }
 
-// Listener Perfil
+// Listener Perfil MODIFICADO
 if (document.getElementById('profileForm')) {
     document.getElementById('profileForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -423,6 +388,9 @@ if (document.getElementById('profileForm')) {
 
             const username = document.getElementById('profileUsername').value;
             const website = document.getElementById('profileWebsite').value;
+            // Capturar el valor de Telegram
+            const telegram_chat_id = document.getElementById('profileTelegram').value;
+            
             const avatarFile = document.getElementById('avatarFile').files[0];
             
             let avatar_url = null;
@@ -442,6 +410,8 @@ if (document.getElementById('profileForm')) {
                 id: user.id,
                 username,
                 website,
+                // Guardar Telegram (o null si está vacío)
+                telegram_chat_id: telegram_chat_id || null, 
                 updated_at: new Date(),
             };
 
@@ -572,7 +542,7 @@ if (chatContainer) {
 let isUserPremium = false;
 let currentSubscriptions = [];
 
-// Verificar si el usuario es Premium (FUNCIÓN MODIFICADA)
+// Verificar si el usuario es Premium
 async function checkPremiumStatus(userId) {
     try {
         const { data, error } = await supabase
@@ -589,15 +559,10 @@ async function checkPremiumStatus(userId) {
         if (data && data.is_premium) {
             isUserPremium = true;
             
-            // --- MODIFICACIÓN: OCULTAR TODO EL BLOQUE DE PUBLICIDAD ---
-            // 1. Ocultar Imagen
             document.querySelectorAll('.ad-banner').forEach(el => el.style.display = 'none');
-            // 2. Ocultar Texto "Publicidad"
             document.querySelectorAll('.ad-label').forEach(el => el.style.display = 'none');
-            // 3. Ocultar Contenedor en detalle (para evitar huecos)
             document.querySelectorAll('.ad-container-detail').forEach(el => el.style.display = 'none');
 
-            // Mostrar Badge VIP
             const vipBadge = document.getElementById('vip-badge');
             if(vipBadge) vipBadge.classList.remove('d-none');
         }
@@ -606,7 +571,6 @@ async function checkPremiumStatus(userId) {
     }
 }
 
-// Lógica del botón de suscripción (Solo en detalle.html)
 const btnSubscribe = document.getElementById('btnSubscribe');
 
 if (btnSubscribe) {
@@ -723,10 +687,9 @@ if (btnSubscribe) {
 
 
 // ---------------------------------------------------------
-// 8. INTEGRACIÓN PAYPAL (CON PROTECCIÓN ANTI-FALLOS)
+// 8. INTEGRACIÓN PAYPAL
 // ---------------------------------------------------------
 if (document.getElementById('paypal-button-container')) {
-    // Verificamos si PayPal cargó correctamente antes de intentar usarlo
     if (typeof paypal !== 'undefined') {
         try {
             paypal.Buttons({
@@ -771,14 +734,13 @@ if (document.getElementById('paypal-button-container')) {
             document.getElementById('paypal-button-container').innerHTML = "<p class='text-danger small'>Error cargando pago. Revisa la consola.</p>";
         }
     } else {
-        // Si PayPal no cargó (por AdBlock o error de red), mostramos un aviso en lugar de romper la página
         console.warn("PayPal no está definido. Posible AdBlock.");
         document.getElementById('paypal-button-container').innerHTML = "<p class='text-warning small text-center'><i class='fas fa-exclamation-triangle'></i> El pago no carga. Desactiva el AdBlock.</p>";
     }
 }
 
 // ---------------------------------------------------------
-// 9. BOTÓN NAVBAR "HACERSE VIP" (SEGURO)
+// 9. BOTÓN NAVBAR "HACERSE VIP"
 // ---------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
     const btnVipNav = document.querySelector('.btn-vip');
@@ -787,13 +749,11 @@ document.addEventListener('DOMContentLoaded', () => {
         btnVipNav.addEventListener('click', (e) => {
             e.preventDefault();
 
-            // 1. Si ya es VIP, avisamos
             if (typeof isUserPremium !== 'undefined' && isUserPremium) {
                 alert("¡Ya eres usuario VIP! Gracias por tu apoyo.");
                 return;
             }
 
-            // 2. Abrir el Modal de forma segura
             const modalElement = document.getElementById('vipModal');
             if (modalElement) {
                 const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
