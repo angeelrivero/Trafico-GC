@@ -262,7 +262,7 @@ async function updateDashboardLive() {
 }
 
 // ---------------------------------------------------------
-// 3. MAPA GOOGLE (ESTILO VOLCÁNICO)
+// 3. MAPA GOOGLE (CON TRÁFICO REAL)
 // ---------------------------------------------------------
 window.initMap = function() {
     const mapDiv = document.getElementById("googleMap");
@@ -270,6 +270,7 @@ window.initMap = function() {
 
     const granCanaria = { lat: 28.05, lng: -15.45 };
     
+    // Estilo oscuro (Dark Mode)
     const darkStyle = [
         { elementType: "geometry", stylers: [{ color: "#212121" }] },
         { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
@@ -287,10 +288,21 @@ window.initMap = function() {
         zoom: 11,
         center: granCanaria,
         styles: darkStyle,
-        disableDefaultUI: true
+        disableDefaultUI: true // Mantiene el mapa limpio
     });
 
-    const directionsService = new google.maps.DirectionsService();
+    // ==============================================================
+    // AQUI ESTA LA MAGIA: ACTIVAR CAPA DE TRÁFICO REAL DE GOOGLE
+    // ==============================================================
+    const trafficLayer = new google.maps.TrafficLayer();
+    trafficLayer.setMap(map);
+
+    // NOTA: He comentado (desactivado) el código de abajo que pintaba
+    // las líneas manuales (trafficSegments) para que no tapen el
+    // tráfico real de Google. Si quieres usar tus líneas personalizadas
+    // otra vez, solo tienes que descomentar este bloque.
+
+    /* const directionsService = new google.maps.DirectionsService();
 
     function getColorByLevel(level) {
         if (level <= 2) return "#00FF00"; 
@@ -320,6 +332,7 @@ window.initMap = function() {
             }
         });
     });
+    */
 }
 
 // ---------------------------------------------------------
