@@ -123,11 +123,19 @@ function updateUI(session) {
 
         if(userEmailDisplay) userEmailDisplay.textContent = "Usuario";
         
+        // --- AQUÍ RESTAURAMOS LOS ANUNCIOS SI CIERRA SESIÓN ---
         document.querySelectorAll('.ad-banner').forEach(el => el.style.display = 'block');
+        document.querySelectorAll('.ad-label').forEach(el => el.style.display = 'block'); // Restaurar texto
+        document.querySelectorAll('.ad-container-detail').forEach(el => el.style.display = 'block'); // Restaurar contenedor
+        
         const navImg = document.querySelector('.nav-avatar');
         if (navImg) {
             navImg.outerHTML = '<i class="fas fa-user-circle"></i>';
         }
+        
+        // Ocultar badge VIP si cierra sesión
+        const vipBadge = document.getElementById('vip-badge');
+        if(vipBadge) vipBadge.classList.add('d-none');
     }
 }
 
@@ -459,7 +467,7 @@ if (document.getElementById('avatarFile')) {
 }
 
 // ---------------------------------------------------------
-// 6. CHAT (CORREGIDO: FECHA Y HORA)
+// 6. CHAT
 // ---------------------------------------------------------
 const chatContainer = document.getElementById('chat-messages');
 const chatInput = document.getElementById('chatInput');
@@ -476,7 +484,6 @@ if (chatContainer) {
             avatarImg = `<img src="${STORAGE_URL}${profile.avatar_url}" class="chat-avatar" alt="User">`;
         }
         
-        // --- AQUÍ ESTÁ EL CAMBIO PARA QUE SE VEA COMO "16/12/25 14:30" ---
         const time = new Date(msg.created_at).toLocaleString('es-ES', { 
             day: '2-digit', 
             month: '2-digit',
@@ -484,7 +491,6 @@ if (chatContainer) {
             hour: '2-digit', 
             minute: '2-digit' 
         });
-        // ------------------------------------------------------------------
 
         const html = `
             <div class="forum-msg">
@@ -553,7 +559,7 @@ if (chatContainer) {
 let isUserPremium = false;
 let currentSubscriptions = [];
 
-// Verificar si el usuario es Premium
+// Verificar si el usuario es Premium (FUNCIÓN MODIFICADA)
 async function checkPremiumStatus(userId) {
     try {
         const { data, error } = await supabase
@@ -569,7 +575,16 @@ async function checkPremiumStatus(userId) {
 
         if (data && data.is_premium) {
             isUserPremium = true;
+            
+            // --- MODIFICACIÓN: OCULTAR TODO EL BLOQUE DE PUBLICIDAD ---
+            // 1. Ocultar Imagen
             document.querySelectorAll('.ad-banner').forEach(el => el.style.display = 'none');
+            // 2. Ocultar Texto "Publicidad"
+            document.querySelectorAll('.ad-label').forEach(el => el.style.display = 'none');
+            // 3. Ocultar Contenedor en detalle (para evitar huecos)
+            document.querySelectorAll('.ad-container-detail').forEach(el => el.style.display = 'none');
+
+            // Mostrar Badge VIP
             const vipBadge = document.getElementById('vip-badge');
             if(vipBadge) vipBadge.classList.remove('d-none');
         }
@@ -752,7 +767,6 @@ if (document.getElementById('paypal-button-container')) {
 // ---------------------------------------------------------
 // 9. BOTÓN NAVBAR "HACERSE VIP" (SEGURO)
 // ---------------------------------------------------------
-// Usamos este evento para asegurar que el HTML ha cargado completamente antes de buscar el botón
 document.addEventListener('DOMContentLoaded', () => {
     const btnVipNav = document.querySelector('.btn-vip');
 
@@ -769,7 +783,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // 2. Abrir el Modal de forma segura
             const modalElement = document.getElementById('vipModal');
             if (modalElement) {
-                // 'getOrCreateInstance' es más seguro que 'new' si se hace click rápido varias veces
                 const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
                 modal.show();
             } else {
