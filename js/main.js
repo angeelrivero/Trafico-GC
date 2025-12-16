@@ -196,7 +196,7 @@ if (container) {
                         </div>
                         <div class="iframe-container">
                             <iframe 
-                                src="https://www.youtube.com/embed/${cam.videoId}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0" 
+                                src="https://www.youtube-nocookie.com/embed/${cam.videoId}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0" 
                                 title="Cámara Tráfico"
                                 frameborder="0" 
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
