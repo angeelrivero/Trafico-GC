@@ -31,13 +31,12 @@ if (document.getElementById('registerForm')) {
             return;
         }
 
-        // --- BLOQUE NUEVO PARA GUARDAR EL EMAIL ---
+        // --- BLOQUE PARA GUARDAR EL EMAIL ---
         if (data.user) {
-            // Intentamos actualizar/crear el perfil con el email
             await supabase.from('profiles').upsert({
                 id: data.user.id,
-                email: email, // <--- AQUÍ GUARDAMOS EL EMAIL
-                username: email.split('@')[0], // Usamos la parte antes del @ como usuario inicial
+                email: email,
+                username: email.split('@')[0], 
                 updated_at: new Date()
             });
         }
@@ -149,8 +148,6 @@ const camerasData = [
     { id: 3, name: "GC2 Arucas", level: 5, videoId: "z1E5ciDe3a0", tsChannel: "000000", tsField: "1" },
     { id: 4, name: "GC2 Bañaderos", level: 1, videoId: "XGzncIaJJ44", tsChannel: "000000", tsField: "1" },
     { id: 5, name: "Mesa y López", level: 5, videoId: "gfsJIcCZzlI", tsChannel: "000000", tsField: "1" },
-    
-    // --- LA BALLENA CONFIGURADA CON READ KEY ---
     { 
         id: 6, 
         name: "La Ballena", 
@@ -160,7 +157,6 @@ const camerasData = [
         tsField: "1",
         readKey: "Q1XCOL5COQL3D5QB" 
     },
-    
     { id: 7, name: "Siete Palmas", level: 3, videoId: "eMbMc7VnI5Q", tsChannel: "000000", tsField: "1" },
     { id: 8, name: "Maspalomas Sur", level: 0, videoId: "xrYXDI5uAoA", tsChannel: "000000", tsField: "1" }
 ];
@@ -172,7 +168,7 @@ const trafficSegments = [
 ];
 
 // ---------------------------------------------------------
-// 2. GENERADOR DE GRID DE CÁMARAS (MODIFICADO)
+// 2. GENERADOR DE GRID DE CÁMARAS
 // ---------------------------------------------------------
 const container = document.getElementById('cameras-container');
 
@@ -183,8 +179,6 @@ if (container) {
         if (cam.level >= 7) barColor = 'bg-danger';
         if (cam.level == 10) barColor = 'bg-dark';
 
-        // --- CORRECCIÓN DE VISIBILIDAD DE TEXTO "Click para ver..." ---
-        // Se cambió el color en el style del small
         const html = `
             <div class="col-12 col-md-6 col-lg-3"> 
                 <a href="detalle.html?id=${cam.id}" class="camera-card-link">
@@ -268,7 +262,6 @@ window.initMap = function() {
 
     const granCanaria = { lat: 28.05, lng: -15.45 };
     
-    // Estilo personalizado: Gris volcánico neutro con Mar Negro
     const darkStyle = [
         { elementType: "geometry", stylers: [{ color: "#212121" }] },
         { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
@@ -329,8 +322,6 @@ async function getProfile(session) {
     if (!session) return;
     const { user } = session;
 
-    // --- BLOQUE DE AUTOCORRECCIÓN ---
-    // Si el usuario entra y no tenemos su email público, lo guardamos ahora mismo.
     const { data: currentProfile } = await supabase
         .from('profiles')
         .select('email')
@@ -343,7 +334,7 @@ async function getProfile(session) {
             email: user.email 
         }).eq('id', user.id);
     }
-    // --------------------------------
+    
     const { data, error } = await supabase
         .from('profiles')
         .select(`username, website, avatar_url`)
@@ -468,7 +459,7 @@ if (document.getElementById('avatarFile')) {
 }
 
 // ---------------------------------------------------------
-// 6. CHAT
+// 6. CHAT (CORREGIDO: FECHA Y HORA)
 // ---------------------------------------------------------
 const chatContainer = document.getElementById('chat-messages');
 const chatInput = document.getElementById('chatInput');
@@ -484,14 +475,23 @@ if (chatContainer) {
         if (profile.avatar_url) {
             avatarImg = `<img src="${STORAGE_URL}${profile.avatar_url}" class="chat-avatar" alt="User">`;
         }
-        const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        // --- AQUÍ ESTÁ EL CAMBIO PARA QUE SE VEA COMO "16/12/25 14:30" ---
+        const time = new Date(msg.created_at).toLocaleString('es-ES', { 
+            day: '2-digit', 
+            month: '2-digit',
+            year: '2-digit',
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        // ------------------------------------------------------------------
 
         const html = `
             <div class="forum-msg">
                 <div class="d-flex align-items-center mb-1">
                     ${avatarImg}
                     <span class="chat-username">${username}</span>
-                    <small class="chat-time">${time}</small>
+                    <small class="chat-time" style="margin-left: auto;">${time}</small>
                 </div>
                 <div>${msg.content}</div>
             </div>
@@ -547,7 +547,7 @@ if (chatContainer) {
 
 
 // ---------------------------------------------------------
-// 7. SISTEMA DE SUSCRIPCIONES Y VIP (CORREGIDO)
+// 7. SISTEMA DE SUSCRIPCIONES Y VIP
 // ---------------------------------------------------------
 
 let isUserPremium = false;
@@ -569,15 +569,9 @@ async function checkPremiumStatus(userId) {
 
         if (data && data.is_premium) {
             isUserPremium = true;
-            
-            // 1. Ocultar Anuncios
             document.querySelectorAll('.ad-banner').forEach(el => el.style.display = 'none');
-            
-            // 2. Mostrar Badge VIP
             const vipBadge = document.getElementById('vip-badge');
             if(vipBadge) vipBadge.classList.remove('d-none');
-            
-            console.log("Usuario identificado como VIP");
         }
     } catch (err) {
         console.error("Error inesperado en VIP:", err);
@@ -590,13 +584,12 @@ const btnSubscribe = document.getElementById('btnSubscribe');
 if (btnSubscribe) {
     
     async function initSubscribeButton() {
-        // 1. Verificar sesión
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
             btnSubscribe.innerHTML = '<i class="fas fa-lock"></i> Inicia sesión para alertar';
             btnSubscribe.disabled = true;
-            btnSubscribe.className = 'btn btn-secondary'; // Gris si no hay sesión
+            btnSubscribe.className = 'btn btn-secondary';
             return;
         }
 
@@ -610,7 +603,6 @@ if (btnSubscribe) {
 
         const camId = parseInt(camIdParam);
 
-        // 2. Obtener suscripciones actuales desde Supabase
         try {
             const { data, error } = await supabase
                 .from('subscriptions')
@@ -635,8 +627,6 @@ if (btnSubscribe) {
 
     function updateSubscribeButtonUI(camId) {
         const isSubscribed = currentSubscriptions.includes(camId);
-        
-        // Eliminamos el estado disabled y actualizamos texto
         btnSubscribe.disabled = false;
 
         if (isSubscribed) {
@@ -648,7 +638,6 @@ if (btnSubscribe) {
         }
     }
 
-    // Evento Click
     btnSubscribe.addEventListener('click', async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
@@ -657,13 +646,11 @@ if (btnSubscribe) {
         const camId = parseInt(urlParams.get('id'));
         const isSubscribed = currentSubscriptions.includes(camId);
 
-        // Feedback visual inmediato (loading)
         const oldText = btnSubscribe.innerHTML;
         btnSubscribe.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
         btnSubscribe.disabled = true;
 
         if (isSubscribed) {
-            // --- DESUSCRIBIRSE ---
             const { error } = await supabase
                 .from('subscriptions')
                 .delete()
@@ -671,15 +658,11 @@ if (btnSubscribe) {
 
             if (!error) {
                 currentSubscriptions = currentSubscriptions.filter(id => id !== camId);
-                // alert("Alerta desactivada."); // Opcional
             } else {
                 console.error("Error borrar:", error);
                 alert("Error al desactivar.");
             }
         } else {
-            // --- SUSCRIBIRSE ---
-            
-            // Chequeo VIP vs FREE (Límite 2)
             if (!isUserPremium && currentSubscriptions.length >= 2) {
                 const modalEl = document.getElementById('vipModal');
                 if(modalEl) {
@@ -688,8 +671,6 @@ if (btnSubscribe) {
                 } else {
                     alert("Límite alcanzado. Hazte VIP para más.");
                 }
-                
-                // Restaurar botón
                 updateSubscribeButtonUI(camId);
                 return;
             }
@@ -709,13 +690,12 @@ if (btnSubscribe) {
         updateSubscribeButtonUI(camId);
     });
 
-    // Iniciar
     initSubscribeButton();
 }
 
 
 // ---------------------------------------------------------
-// 8. INTEGRACIÓN PAYPAL (En index.html o donde esté el modal)
+// 8. INTEGRACIÓN PAYPAL
 // ---------------------------------------------------------
 if (document.getElementById('paypal-button-container')) {
     
@@ -738,19 +718,17 @@ if (document.getElementById('paypal-button-container')) {
         },
         onApprove: function(data, actions) {
             return actions.order.capture().then(async function(details) {
-                // PAGO EXITOSO
                 alert('¡Pago completado por ' + details.payer.name.given_name + '! Activando VIP...');
                 
                 const { data: { user } } = await supabase.auth.getUser();
                 
-                // Actualizar perfil a PREMIUM en Supabase
                 const { error } = await supabase
                     .from('profiles')
                     .update({ is_premium: true })
                     .eq('id', user.id);
 
                 if (!error) {
-                    location.reload(); // Recargar para aplicar cambios (quitar anuncios, etc)
+                    location.reload(); 
                 } else {
                     alert("Hubo un error activando tu cuenta, contáctanos.");
                 }
@@ -759,7 +737,6 @@ if (document.getElementById('paypal-button-container')) {
     }).render('#paypal-button-container');
 }
 
-// Listener para abrir modal VIP desde el Navbar
 const btnVipNav = document.querySelector('.btn-vip');
 if(btnVipNav) {
     btnVipNav.addEventListener('click', (e) => {
