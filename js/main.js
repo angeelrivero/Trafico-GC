@@ -1,9 +1,16 @@
 // ---------------------------------------------------------
-// 0. CONFIGURACIÓN SUPABASE
+// 0. CONFIGURACIÓN SUPABASE (CON PROTECCIÓN)
 // ---------------------------------------------------------
 const SUPABASE_URL = 'https://wfoidmoojjqwcltcpyaf.supabase.co'; 
 const SUPABASE_KEY = 'sb_publishable_xzIZVjCgxaTyOwS1lrjHpA_SzEOtaxq';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Verificamos que la librería se cargó antes de usarla
+if (typeof window.supabase === 'undefined') {
+    console.error("URGENTE: La librería de Supabase no se ha cargado. Revisa tu conexión o el AdBlock.");
+    alert("Error de conexión: No se pudieron cargar los servicios principales.");
+} 
+
+const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // ---------------------------------------------------------
 // LOGICA DE AUTENTICACIÓN
