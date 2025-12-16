@@ -695,53 +695,87 @@ if (btnSubscribe) {
 
 
 // ---------------------------------------------------------
-// 8. INTEGRACIÓN PAYPAL
+// 8. INTEGRACIÓN PAYPAL (CON PROTECCIÓN ANTI-FALLOS)
 // ---------------------------------------------------------
 if (document.getElementById('paypal-button-container')) {
-    
-    paypal.Buttons({
-        style: {
-            layout: 'vertical',
-            color:  'gold',
-            shape:  'rect',
-            label:  'paypal'
-        },
-        createOrder: function(data, actions) {
-            return actions.order.create({
-                purchase_units: [{
-                    description: "Suscripción GrancaCam VIP",
-                    amount: {
-                        value: '4.99'
-                    }
-                }]
-            });
-        },
-        onApprove: function(data, actions) {
-            return actions.order.capture().then(async function(details) {
-                alert('¡Pago completado por ' + details.payer.name.given_name + '! Activando VIP...');
-                
-                const { data: { user } } = await supabase.auth.getUser();
-                
-                const { error } = await supabase
-                    .from('profiles')
-                    .update({ is_premium: true })
-                    .eq('id', user.id);
+    // Verificamos si PayPal cargó correctamente antes de intentar usarlo
+    if (typeof paypal !== 'undefined') {
+        try {
+            paypal.Buttons({
+                style: {
+                    layout: 'vertical',
+                    color:  'gold',
+                    shape:  'rect',
+                    label:  'paypal'
+                },
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{
+                            description: "Suscripción GrancaCam VIP",
+                            amount: { value: '4.99' }
+                        }]
+                    });
+                },
+                onApprove: function(data, actions) {
+                    return actions.order.capture().then(async function(details) {
+                        alert('¡Pago completado por ' + details.payer.name.given_name + '! Activando VIP...');
+                        const { data: { user } } = await supabase.auth.getUser();
+                        const { error } = await supabase
+                            .from('profiles')
+                            .update({ is_premium: true })
+                            .eq('id', user.id);
 
-                if (!error) {
-                    location.reload(); 
-                } else {
-                    alert("Hubo un error activando tu cuenta, contáctanos.");
+                        if (!error) {
+                            location.reload(); 
+                        } else {
+                            alert("Hubo un error activando tu cuenta, contáctanos.");
+                        }
+                    });
+                },
+                onError: function (err) {
+                    console.error('Error en PayPal:', err);
+                    alert("Hubo un problema con la pasarela de pago.");
                 }
-            });
+            }).render('#paypal-button-container');
+
+        } catch (error) {
+            console.error("Error inicializando botones de PayPal:", error);
+            document.getElementById('paypal-button-container').innerHTML = "<p class='text-danger small'>Error cargando pago. Revisa la consola.</p>";
         }
-    }).render('#paypal-button-container');
+    } else {
+        // Si PayPal no cargó (por AdBlock o error de red), mostramos un aviso en lugar de romper la página
+        console.warn("PayPal no está definido. Posible AdBlock.");
+        document.getElementById('paypal-button-container').innerHTML = "<p class='text-warning small text-center'><i class='fas fa-exclamation-triangle'></i> El pago no carga. Desactiva el AdBlock.</p>";
+    }
 }
 
-const btnVipNav = document.querySelector('.btn-vip');
-if(btnVipNav) {
-    btnVipNav.addEventListener('click', (e) => {
-        e.preventDefault();
-        const modal = new bootstrap.Modal(document.getElementById('vipModal'));
-        modal.show();
-    });
-}
+// ---------------------------------------------------------
+// 9. BOTÓN NAVBAR "HACERSE VIP" (SEGURO)
+// ---------------------------------------------------------
+// Usamos este evento para asegurar que el HTML ha cargado completamente antes de buscar el botón
+document.addEventListener('DOMContentLoaded', () => {
+    const btnVipNav = document.querySelector('.btn-vip');
+
+    if (btnVipNav) {
+        btnVipNav.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // 1. Si ya es VIP, avisamos
+            if (typeof isUserPremium !== 'undefined' && isUserPremium) {
+                alert("¡Ya eres usuario VIP! Gracias por tu apoyo.");
+                return;
+            }
+
+            // 2. Abrir el Modal de forma segura
+            const modalElement = document.getElementById('vipModal');
+            if (modalElement) {
+                // 'getOrCreateInstance' es más seguro que 'new' si se hace click rápido varias veces
+                const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                modal.show();
+            } else {
+                console.error("Error: No se encuentra el modal con id 'vipModal'");
+            }
+        });
+        console.log("Botón VIP activado correctamente.");
+    }
+});

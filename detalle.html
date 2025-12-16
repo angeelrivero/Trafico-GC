@@ -11,12 +11,19 @@
     <link rel="stylesheet" href="css/style.css">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body { overflow-x: hidden; background-color: #1a1a2e; }
         .video-card { border: 1px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.5); background-color: #000; overflow: hidden; }
         .stats-card { height: 100%; border-left: 1px solid #333; background: #16213e; }
         .fade-change { transition: color 0.5s ease; }
+        
+        .ad-container-detail {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
         @media (min-width: 1400px) { .container-fluid { padding-left: 30px; padding-right: 30px; } }
     </style>
 </head>
@@ -35,6 +42,22 @@
     </nav>
 
     <div class="container-fluid px-3">
+        
+        <div class="row ad-container-detail">
+            <div class="col-12">
+                <div class="text-center">
+                    <div class="ad-label" style="color: #ccc; font-size: 0.8rem; margin-bottom: 5px;">Publicidad</div>
+                    <div class="ad-banner">
+                        <a href="https://www.amazon.es/neumaticos-coche/b?ie=UTF8&node=2424920031" target="_blank" rel="nofollow sponsored">
+                            <img src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=800&auto=format&fit=crop" 
+                                 alt="Oferta Neumáticos" 
+                                 style="max-height: 120px; width: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row g-3">
             
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -84,11 +107,10 @@
                             <small class="text-muted" style="font-size: 10px;">ID Canal: <span id="ts-channel">--</span></small>
                         </div>
 
-                        <div id="thingspeak-placeholder" class="flex-grow-1 d-flex flex-column justify-content-end">
-                             <div style="height: 150px; background: rgba(0,0,0,0.3); border-radius: 5px; border: 1px dashed #555; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                                <i class="fas fa-chart-line fa-2x text-muted mb-2"></i>
-                                <span class="text-muted small text-center px-2">Gráfica Histórica</span>
-                            </div>
+                        <div id="thingspeak-placeholder" class="flex-grow-1 d-flex flex-column">
+                             <div style="flex-grow: 1; min-height: 180px; position: relative;">
+                                <canvas id="trafficChart"></canvas>
+                             </div>
                             <p class="text-center text-muted mt-2 mb-0" style="font-size: 0.75rem;">
                                 Actualizado: <span id="lastUpdate">--:--:--</span>
                             </p>
@@ -111,57 +133,12 @@
 
     </div>
 
-    <footer class="footer-custom">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <h5 class="d-flex align-items-center">
-                        <img src="images/Logo_Original.png" alt="Logo" style="height: 30px; margin-right: 10px;">
-                        GrancaCam
-                    </h5>
-                    <p class="small">Monitorización de tráfico en tiempo real en Gran Canaria mediante cámaras DGT y sensores IoT.</p>
-                    <div class="mt-3">
-                        <a href="#" class="text-light me-3"><i class="fab fa-github fa-lg"></i></a>
-                        <a href="#" class="text-light me-3"><i class="fab fa-twitter fa-lg"></i></a>
-                        <a href="#" class="text-light"><i class="fab fa-instagram fa-lg"></i></a>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <h5>Enlaces Legales</h5>
-                    <ul class="footer-links">
-                        <li>
-                            <a href="index.html">
-                                <i class="fas fa-chevron-right text-muted me-2" style="font-size: 0.7rem;"></i> Inicio
-                            </a>
-                        </li>
-                        <li>
-                            <a href="aviso-legal.html">
-                                <i class="fas fa-chevron-right text-muted me-2" style="font-size: 0.7rem;"></i> Aviso Legal
-                            </a>
-                        </li>
-                        <li>
-                            <a href="aviso-legal.html">
-                                <i class="fas fa-chevron-right text-muted me-2" style="font-size: 0.7rem;"></i> Privacidad y Cookies
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-lg-4 col-md-12 mb-4">
-                    <h5>Contacto</h5>
-                    <p class="small mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i> Gran Canaria, España</p>
-                    <p class="small mb-2"><i class="fas fa-envelope text-danger me-2"></i> <a href="mailto:angel.rivero104@alu.ulpgc.es">angel.rivero104@alu.ulpgc.es</a></p>
-                    <p class="small mb-2"><i class="fas fa-envelope text-danger me-2"></i> <a href="mailto:isaac.vera102@alu.ulpgc.es">isaac.vera102@alu.ulpgc.es</a></p>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <div class="row">
-                    <div class="col-md-6 text-md-start">&copy; 2025 GrancaCam. Todos los derechos reservados.</div>
-                    <div class="col-md-6 text-md-end mt-2 mt-md-0"><span class="text-muted">Desarrollado por A. Rivero & I. Vera</span></div>
-                </div>
-            </div>
+    <footer class="footer-custom mt-5 py-4 bg-dark text-light border-top border-secondary">
+        <div class="container text-center">
+            <small>&copy; 2025 GrancaCam. Desarrollado por A. Rivero & I. Vera</small>
         </div>
     </footer>
-
+    
     <div class="modal fade" id="vipModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-light border-secondary">
@@ -170,14 +147,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <h3>Elimina anuncios y alertas ilimitadas</h3>
-                    <p>Por solo <strong>4.99€/mes</strong></p>
-                    <ul class="text-start mb-4" style="list-style: none;">
-                        <li><i class="fas fa-check text-success"></i> Suscripción a todas las cámaras</li>
-                        <li><i class="fas fa-check text-success"></i> Alertas por Email</li>
-                        <li><i class="fas fa-check text-success"></i> Sin publicidad</li>
-                    </ul>
-                    <div id="paypal-button-container"></div>
+                    <p>Funcionalidad Premium (Aquí iría tu integración de Paypal)</p>
                 </div>
             </div>
         </div>
@@ -190,9 +160,31 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // ----------------------------------------------------
-            // DATOS LOCALES (Nombre diferente para evitar conflicto con main.js)
-            // ----------------------------------------------------
+            // ============================================
+            // 1. CONFIGURACIÓN DE LA GRÁFICA Y CÁMARAS
+            // ============================================
+            let myChart = null; 
+
+            // Simulación de activación del botón (Por si main.js tarda en cargar o falla)
+            // Si main.js funciona correctamente, sobrescribirá esto.
+            const btnSubscribe = document.getElementById('btnSubscribe');
+            if(btnSubscribe) {
+                setTimeout(() => {
+                    // Solo lo activamos si sigue diciendo "Cargando..."
+                    if(btnSubscribe.innerText.includes("Cargando")) {
+                        btnSubscribe.disabled = false;
+                        btnSubscribe.innerHTML = '<i class="fas fa-bell"></i> Suscribirse a Alertas';
+                        btnSubscribe.classList.remove('btn-outline-secondary');
+                        btnSubscribe.classList.add('btn-outline-danger');
+                        
+                        // Evento simple por si no hay main.js
+                        btnSubscribe.addEventListener('click', () => {
+                            alert("Para que este botón funcione, asegúrate de que 'js/main.js' está bien configurado con Supabase.");
+                        });
+                    }
+                }, 2000);
+            }
+
             const detailCameras = [
                 { id: 1, name: "GC1 Telde", videoId: "KmcLujr7PU0", tsChannel: "000000", tsField: "1" },
                 { id: 2, name: "GC1 Jinamar", videoId: "2vDowXZy9cc", tsChannel: "000000", tsField: "1" },
@@ -211,17 +203,14 @@
                 { id: 8, name: "Maspalomas Sur", videoId: "xrYXDI5uAoA", tsChannel: "000000", tsField: "1" }
             ];
 
-            // ----------------------------------------------------
-            // CARGAR VÍDEO
-            // ----------------------------------------------------
             const urlParams = new URLSearchParams(window.location.search);
-            const camId = parseInt(urlParams.get('id'));
+            // Usamos ID 6 (La Ballena) por defecto si no hay ID en la URL para probar
+            const camId = parseInt(urlParams.get('id')) || 6; 
             
-            // Usamos la lista local 'detailCameras'
             const camera = detailCameras.find(c => c.id === camId);
 
             if (camera) {
-                // 1. Poner Título
+                // Títulos
                 document.title = `${camera.name} | Live`;
                 const titleEl = document.getElementById('cameraTitle');
                 if(titleEl) titleEl.innerText = camera.name;
@@ -229,10 +218,10 @@
                 const tsEl = document.getElementById('ts-channel');
                 if(tsEl) tsEl.innerText = camera.tsChannel;
 
-                // 2. Inyectar Iframe (Reemplaza el Spinner)
+                // Video
                 const videoContainer = document.getElementById('videoContainer');
                 if(videoContainer) {
-                    const iframeHtml = `
+                    videoContainer.innerHTML = `
                         <iframe 
                             src="https://www.youtube.com/embed/${camera.videoId}?autoplay=1&mute=1&rel=0&playsinline=1" 
                             title="Cámara Tráfico"
@@ -242,29 +231,20 @@
                             allowfullscreen>
                         </iframe>
                     `;
-                    videoContainer.innerHTML = iframeHtml;
                 }
 
-                // 3. Iniciar ThingSpeak
+                // Iniciar Chart y ThingSpeak
+                initChart();
                 fetchThingSpeakData(camera);
                 setInterval(() => fetchThingSpeakData(camera), 15000);
 
             } else {
-                // ERROR: Cámara no encontrada en el array
-                const videoContainer = document.getElementById('videoContainer');
-                if(videoContainer) {
-                    videoContainer.innerHTML = `
-                        <div class="d-flex flex-column justify-content-center align-items-center h-100 text-danger">
-                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                            <span>Error: Cámara no encontrada (ID ${camId})</span>
-                        </div>
-                    `;
-                }
+                console.error("Cámara no encontrada");
             }
 
-            // ----------------------------------------------------
-            // LÓGICA THINGSPEAK
-            // ----------------------------------------------------
+            // ============================================
+            // 2. LÓGICA DE THINGSPEAK Y CHART.JS
+            // ============================================
             async function fetchThingSpeakData(cam) {
                 if(!cam || cam.tsChannel === "000000") {
                     updateUI(0);
@@ -272,30 +252,100 @@
                 }
 
                 try {
-                    let url = `https://api.thingspeak.com/channels/${cam.tsChannel}/feeds/last.json`;
+                    let url = `https://api.thingspeak.com/channels/${cam.tsChannel}/feeds.json?results=20`;
                     if (cam.readKey && cam.readKey !== "") {
-                        url += `?api_key=${cam.readKey}`;
+                        url += `&api_key=${cam.readKey}`;
                     }
 
                     const response = await fetch(url);
                     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
                     const data = await response.json();
-                    const fieldValue = data[`field${cam.tsField}`];
                     
-                    if (fieldValue === null || fieldValue === undefined) {
-                        updateUI(0);
-                        return;
+                    const feeds = data.feeds;
+                    if (feeds.length > 0) {
+                        const lastFeed = feeds[feeds.length - 1];
+                        const lastValue = lastFeed[`field${cam.tsField}`];
+                        updateUI(parseInt(lastValue) || 0);
+                        updateChartData(feeds, cam.tsField);
                     }
-
-                    const trafficLevel = parseInt(fieldValue); 
-                    updateUI(trafficLevel);
 
                 } catch (error) {
                     console.error("Error conectando a ThingSpeak:", error);
                     const badge = document.getElementById('status-badge');
                     if(badge) badge.innerHTML = '<span class="badge bg-danger">Error Conexión</span>';
                 }
+            }
+
+            function initChart() {
+                const ctx = document.getElementById('trafficChart').getContext('2d');
+                let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(54, 162, 235, 0.5)');   
+                gradient.addColorStop(1, 'rgba(54, 162, 235, 0)');
+
+                myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Intensidad',
+                            data: [],
+                            borderColor: '#36a2eb',
+                            backgroundColor: gradient,
+                            borderWidth: 2,
+                            pointBackgroundColor: '#ffffff',
+                            pointRadius: 3,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff'
+                            }
+                        },
+                        scales: {
+                            x: { display: false, grid: { display: false } },
+                            y: {
+                                beginAtZero: true,
+                                max: 10, 
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#888', font: { size: 10 } }
+                            }
+                        },
+                        interaction: { intersect: false },
+                    }
+                });
+            }
+
+            function updateChartData(feeds, fieldId) {
+                if (!myChart) return;
+                const labels = feeds.map(f => {
+                    const date = new Date(f.created_at);
+                    return date.getHours() + ':' + (date.getMinutes()<10?'0':'') + date.getMinutes();
+                });
+                const dataPoints = feeds.map(f => f[`field${fieldId}`]);
+
+                myChart.data.labels = labels;
+                myChart.data.datasets[0].data = dataPoints;
+                
+                const lastVal = parseFloat(dataPoints[dataPoints.length - 1]);
+                if(lastVal >= 7) {
+                    myChart.data.datasets[0].borderColor = '#dc3545';
+                } else if(lastVal >= 3) {
+                    myChart.data.datasets[0].borderColor = '#ffc107';
+                } else {
+                    myChart.data.datasets[0].borderColor = '#28a745';
+                }
+                myChart.update();
             }
 
             function updateUI(level) {
