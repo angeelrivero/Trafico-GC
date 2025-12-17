@@ -316,3 +316,84 @@ body {
 .fade-in-camera {
     animation: fadeIn 0.5s ease-out forwards;
 }
+
+/* --- MIS ALERTAS (Modal) --- */
+.alert-item {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.alert-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #555;
+}
+
+.alert-name {
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.btn-unsubscribe {
+    color: #ff6b6b;
+    background: transparent;
+    border: 1px solid #ff6b6b;
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.btn-unsubscribe:hover {
+    background: #ff6b6b;
+    color: white;
+}
+
+/* --- MEJORA VISUAL DE ALERTAS --- */
+
+/* Hace que el enlace ocupe todo el espacio sobrante a la izquierda */
+.alert-link-wrapper {
+    flex-grow: 1;           /* Empuja el botón a la derecha */
+    text-decoration: none;  /* Quita el subrayado */
+    color: inherit;         /* Mantiene el color blanco/gris */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Efecto hover suave en el texto */
+.alert-link-wrapper:hover .alert-name {
+    color: var(--accent); /* Se pone amarillo al pasar el ratón */
+}
+
+.alert-link-wrapper:hover small {
+    color: #fff !important; /* El texto pequeño se ilumina */
+}
+
+/* Ajuste fino para el botón de borrar */
+.btn-unsubscribe {
+    z-index: 2; /* Asegura que el botón esté por encima */
+    white-space: nowrap; /* Evita que el botón se rompa en dos líneas */
+}
+
+/* --- CORRECCIÓN PAYPAL (Fondo Blanco) --- */
+#paypal-button-container {
+    background-color: #ffffff !important; /* Forzamos fondo blanco */
+    color: #000000 !important;            /* Forzamos texto negro */
+    padding: 20px;                        /* Espacio interior para que respire */
+    border-radius: 12px;                  /* Bordes redondeados */
+    margin-top: 20px;                     /* Separación del texto de arriba */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5); /* Sombra para darle profundidad */
+}
+
+/* Forzar que los inputs y selects dentro de ese contenedor sean legibles */
+#paypal-button-container input,
+#paypal-button-container select,
+#paypal-button-container label {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+}

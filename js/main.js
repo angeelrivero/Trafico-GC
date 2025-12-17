@@ -212,54 +212,34 @@ const trafficSegments = [
 ];
 
 // ---------------------------------------------------------
-// 2. GENERADOR DE GRID (VERSIÓN LIMPIA CON AUTOPLAY)
+// 2. GENERADOR DE GRID DE CÁMARAS
 // ---------------------------------------------------------
+const container = document.getElementById('cameras-container');
 
-document.addEventListener("DOMContentLoaded", () => {
-    const container = document.getElementById('cameras-container');
-    if (container) {
-        loadCamerasSequentially(container);
-    }
-});
-
-// Función de espera
-const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-async function loadCamerasSequentially(container) {
-    container.innerHTML = ''; // Limpiamos
-
-    for (const cam of camerasData) {
-        // Lógica de colores de la barra
+if (container) {
+    camerasData.forEach(cam => {
         let barColor = 'bg-success';
         if (cam.level >= 3) barColor = 'bg-warning';
         if (cam.level >= 7) barColor = 'bg-danger';
         if (cam.level == 10) barColor = 'bg-dark';
 
-        // URL LIMPIA: Sin parámetros raros de privacidad que causan el Error 153
-        // Usamos 'www.youtube.com' estándar.
-        // mute=1 es OBLIGATORIO para que el navegador permita el autoplay.
-        const videoSrc = `https://www.youtube.com/embed/${cam.videoId}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0&loop=1&playlist=${cam.videoId}`;
-
         const html = `
-            <div class="col-12 col-md-6 col-lg-3 fade-in-camera"> 
+            <div class="col-12 col-md-6 col-lg-3"> 
                 <a href="detalle.html?id=${cam.id}" class="camera-card-link">
                     <div class="camera-card h-100"> 
                         <div class="card-header">
                             <span>${cam.name}</span> 
                             <span id="badge-${cam.id}" class="badge ${barColor}">${cam.level}/10</span>
                         </div>
-                        
-                        <div class="iframe-container" style="background: #000;">
+                        <div class="iframe-container">
                             <iframe 
-                                src="${videoSrc}" 
+                                src="https://www.youtube.com/embed/${cam.videoId}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0" 
                                 title="Cámara Tráfico"
                                 frameborder="0" 
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                allowfullscreen
-                                style="pointer-events: none;"> 
+                                allowfullscreen>
                             </iframe>
                         </div>
-
                         <div class="traffic-stats text-center">
                             <div class="progress" style="height: 6px; background: #333;">
                                 <div id="bar-${cam.id}" class="progress-bar ${barColor}" role="progressbar" style="width: ${cam.level * 10}%"></div>
@@ -270,17 +250,11 @@ async function loadCamerasSequentially(container) {
                 </a>
             </div>
         `;
-        
-        container.insertAdjacentHTML('beforeend', html);
-        
-        // Esperamos 2 SEGUNDOS entre cámara y cámara.
-        // Si lo bajas, te volverá a salir el mensaje del Bot.
-        await wait(2000); 
-    }
+        container.innerHTML += html;
+    });
 
-    // Iniciamos datos
     updateDashboardLive();
-    setInterval(updateDashboardLive, 15000);
+    setInterval(updateDashboardLive, 15000); 
 }
 
 
@@ -702,8 +676,8 @@ if (btnSubscribe) {
         }
     }
 
-    btnSubscribe.addEventListener('click', async () => {
-        // CORREGIDO: supabase -> supabaseClient
+btnSubscribe.addEventListener('click', async () => {
+        // Obtenemos sesión actual
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (!session) return;
 
@@ -711,11 +685,13 @@ if (btnSubscribe) {
         const camId = parseInt(urlParams.get('id'));
         const isSubscribed = currentSubscriptions.includes(camId);
 
+        // Ponemos el botón en estado de carga visual
+        const originalBtnHtml = btnSubscribe.innerHTML; // Guardamos texto original
         btnSubscribe.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
         btnSubscribe.disabled = true;
 
         if (isSubscribed) {
-            // CORREGIDO: supabase -> supabaseClient
+            // --- LÓGICA PARA DESUSCRIBIRSE (No cambia) ---
             const { error } = await supabaseClient
                 .from('subscriptions')
                 .delete()
@@ -728,31 +704,44 @@ if (btnSubscribe) {
                 alert("Error al desactivar.");
             }
         } else {
+            // --- LÓGICA PARA SUSCRIBIRSE ---
+            
+            // 1. VERIFICACIÓN DE LÍMITE GRATUITO (CORREGIDO)
             if (!isUserPremium && currentSubscriptions.length >= 2) {
-                const modalEl = document.getElementById('vipModal');
-                if (modalEl) {
-                    const modal = new bootstrap.Modal(modalEl);
+                
+                // Buscamos el elemento del modal en el HTML
+                const vipModalElement = document.getElementById('vipModal');
+                
+                if (vipModalElement) {
+                    // Usamos getOrCreateInstance: Esto asegura que se abra igual que el botón del menú
+                    const modal = bootstrap.Modal.getOrCreateInstance(vipModalElement);
                     modal.show();
                 } else {
-                    alert("Límite alcanzado. Hazte VIP para más.");
+                    // Fallback por si acaso borras el modal del HTML
+                    alert("Has alcanzado el límite de 2 alertas gratuitas. Hazte VIP para ilimitadas.");
                 }
+
+                // Importante: Restauramos el botón a su estado normal inmediatamente
                 updateSubscribeButtonUI(camId);
-                return;
+                return; // ¡DETENEMOS LA EJECUCIÓN AQUÍ! No guarda en base de datos.
             }
 
-            // CORREGIDO: supabase -> supabaseClient
+            // 2. Si pasa el filtro, guardamos en base de datos
             const { error } = await supabaseClient
                 .from('subscriptions')
                 .insert({ user_id: session.user.id, camera_id: camId });
 
             if (!error) {
                 currentSubscriptions.push(camId);
-                alert("¡Alerta activada! Te avisaremos si hay atasco.");
+                // Feedback visual opcional
+                // alert("¡Alerta activada!"); 
             } else {
                 console.error("Error insertar:", error);
                 alert("Error al suscribirse: " + error.message);
             }
         }
+        
+        // Actualizamos el diseño del botón al final
         updateSubscribeButtonUI(camId);
     });
 
@@ -839,3 +828,141 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Botón VIP activado correctamente.");
     }
 });
+
+
+// ---------------------------------------------------------
+// 10. GESTIÓN DE "MIS ALERTAS"
+// ---------------------------------------------------------
+
+const alertsModalElement = document.getElementById('alertsModal');
+
+if (alertsModalElement) {
+    // Cuando se abre el modal, cargamos la lista
+    alertsModalElement.addEventListener('show.bs.modal', async () => {
+        loadUserAlerts();
+    });
+}
+
+async function loadUserAlerts() {
+    const listContainer = document.getElementById('alertsListContainer');
+    listContainer.innerHTML = '<div class="text-center py-3 text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando suscripciones...</div>';
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+        listContainer.innerHTML = '<p class="text-center text-danger">Debes iniciar sesión.</p>';
+        return;
+    }
+
+    // 1. Obtenemos las suscripciones de la base de datos
+    const { data: subs, error } = await supabaseClient
+        .from('subscriptions')
+        .select('camera_id')
+        .eq('user_id', session.user.id);
+
+    if (error) {
+        console.error("Error fetching alerts:", error);
+        listContainer.innerHTML = '<p class="text-center text-danger">Error al cargar datos.</p>';
+        return;
+    }
+
+    if (!subs || subs.length === 0) {
+        listContainer.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-bell-slash fa-2x text-muted mb-2"></i>
+                <p class="text-muted">No tienes alertas activas.</p>
+                <small class="text-secondary">Ve a una cámara y pulsa "Activar Alerta".</small>
+            </div>
+        `;
+        updateAlertBadge(0);
+        return;
+    }
+
+    // 2. Renderizamos la lista
+    listContainer.innerHTML = ''; // Limpiar
+    updateAlertBadge(subs.length);
+
+    subs.forEach(sub => {
+        // Buscamos el nombre de la cámara en tu array local 'camerasData'
+        const cameraInfo = camerasData.find(c => c.id === sub.camera_id);
+        const cameraName = cameraInfo ? cameraInfo.name : `Cámara #${sub.camera_id}`;
+
+        const itemHTML = `
+            <div class="alert-item" id="sub-item-${sub.camera_id}">
+                <a href="detalle.html?id=${sub.camera_id}" class="alert-link-wrapper">
+                    <div class="alert-name">
+                        <i class="fas fa-video me-2 text-info"></i> ${cameraName}
+                    </div>
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                        <i class="fas fa-external-link-alt fa-xs me-1"></i> Ir a cámara
+                    </small>
+                </a>
+
+                <button class="btn btn-unsubscribe ms-2" onclick="deleteSubscription(${sub.camera_id})">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        `;
+        listContainer.insertAdjacentHTML('beforeend', itemHTML);
+    });
+}
+
+// Función para borrar una suscripción desde el modal
+window.deleteSubscription = async function(camId) {
+    if(!confirm("¿Seguro que quieres dejar de recibir alertas de esta carretera?")) return;
+
+    const btn = document.querySelector(`#sub-item-${camId} button`);
+    if(btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    
+    const { error } = await supabaseClient
+        .from('subscriptions')
+        .delete()
+        .match({ user_id: session.user.id, camera_id: camId });
+
+    if (error) {
+        alert("Error al borrar: " + error.message);
+        if(btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash-alt"></i> Quitar';
+        }
+    } else {
+        // Eliminar visualmente el elemento
+        const item = document.getElementById(`sub-item-${camId}`);
+        if(item) {
+            item.style.opacity = '0';
+            setTimeout(() => {
+                item.remove();
+                // Si nos quedamos sin alertas, recargar para mostrar el mensaje de "vacío"
+                if(document.querySelectorAll('.alert-item').length === 0) {
+                    loadUserAlerts();
+                }
+            }, 300);
+        }
+        
+        // Actualizar array global si estamos en la pagina de detalle
+        if (typeof currentSubscriptions !== 'undefined') {
+            currentSubscriptions = currentSubscriptions.filter(id => id !== camId);
+            // Si estamos viendo esa cámara ahora mismo, actualizar el botón principal
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.get('id') == camId && typeof updateSubscribeButtonUI === 'function'){
+                updateSubscribeButtonUI(camId);
+            }
+        }
+    }
+};
+
+function updateAlertBadge(count) {
+    const badge = document.getElementById('alertCountBadge');
+    if(badge) {
+        if(count > 0) {
+            badge.innerText = count;
+            badge.classList.remove('d-none');
+        } else {
+            badge.classList.add('d-none');
+        }
+    }
+}

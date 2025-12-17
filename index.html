@@ -40,6 +40,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
                             <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">Editar Perfil</a></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#alertsModal">Mis Alertas <span class="badge bg-warning text-dark ms-1" id="alertCountBadge"></span></a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Cerrar Sesión</a></li>
                         </ul>
@@ -279,6 +280,27 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="alertsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="fas fa-bell text-warning"></i> Mis Suscripciones</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">Recibirás un aviso si el tráfico supera el nivel 7 (Rojo).</p>
+                
+                <div id="alertsListContainer" class="d-flex flex-column gap-2">
+                    <div class="text-center py-3">
+                        <i class="fas fa-spinner fa-spin"></i> Cargando...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
