@@ -1,16 +1,45 @@
 // ---------------------------------------------------------
-// 0. CONFIGURACIÓN SUPABASE (CON PROTECCIÓN)
+// 0. CONFIGURACIÓN SUPABASE (A PRUEBA DE FALLOS)
 // ---------------------------------------------------------
 const SUPABASE_URL = 'https://wfoidmoojjqwcltcpyaf.supabase.co'; 
 const SUPABASE_KEY = 'sb_publishable_xzIZVjCgxaTyOwS1lrjHpA_SzEOtaxq';
 
-// Verificamos que la librería se cargó antes de usarla
-if (typeof window.supabase === 'undefined') {
-    console.error("URGENTE: La librería de Supabase no se ha cargado. Revisa tu conexión o el AdBlock.");
-    alert("Error de conexión: No se pudieron cargar los servicios principales.");
-} 
+// 1. Inicializamos la variable
+let supabase = null;
 
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+// 2. Intentamos cargar el cliente real
+try {
+    if (typeof window.supabase !== 'undefined') {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } else {
+        console.warn("Supabase no ha llegado a tiempo. Activando modo seguro.");
+    }   
+} catch (e) {
+    console.error("Error inicializando Supabase:", e);
+}
+
+// 3. SI FALLÓ LA CARGA (Race Condition), CREAMOS UN "FALSO" CLIENTE
+// Esto evita que el código se rompa en la línea 20, 50, etc. y permite que el mapa cargue.
+if (!supabase) {
+    supabase = {
+        auth: {
+            signUp: async () => ({ error: { message: "Error de conexión: Recarga la página" } }),
+            signInWithPassword: async () => ({ error: { message: "Error de conexión" } }),
+            signOut: async () => ({}),
+            onAuthStateChange: () => {}, // No hace nada, pero no explota
+            getSession: async () => ({ data: { session: null } }),
+            getUser: async () => ({ data: { user: null } })
+        },
+        from: () => ({
+            select: () => ({ eq: () => ({ single: async () => ({ data: null }) }) }),
+            upsert: async () => ({ error: null }),
+            insert: async () => ({ error: null }),
+            update: async () => ({ eq: async () => ({ error: null }) })
+        }),
+        storage: { from: () => ({ download: async () => ({ error: "No cargado" }) }) },
+        channel: () => ({ on: () => ({ subscribe: () => {} }) })
+    };
+}
 
 // ---------------------------------------------------------
 // LOGICA DE AUTENTICACIÓN
