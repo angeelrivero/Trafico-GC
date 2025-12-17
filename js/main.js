@@ -619,6 +619,7 @@ const btnSubscribe = document.getElementById('btnSubscribe');
 if (btnSubscribe) {
 
     async function initSubscribeButton() {
+        // CORREGIDO: supabase -> supabaseClient
         const { data: { session } } = await supabaseClient.auth.getSession();
 
         if (!session) {
@@ -639,7 +640,8 @@ if (btnSubscribe) {
         const camId = parseInt(camIdParam);
 
         try {
-            const { data, error } = await supabase
+            // CORREGIDO: supabase -> supabaseClient
+            const { data, error } = await supabaseClient
                 .from('subscriptions')
                 .select('camera_id')
                 .eq('user_id', session.user.id);
@@ -674,6 +676,7 @@ if (btnSubscribe) {
     }
 
     btnSubscribe.addEventListener('click', async () => {
+        // CORREGIDO: supabase -> supabaseClient
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (!session) return;
 
@@ -681,12 +684,12 @@ if (btnSubscribe) {
         const camId = parseInt(urlParams.get('id'));
         const isSubscribed = currentSubscriptions.includes(camId);
 
-        const oldText = btnSubscribe.innerHTML;
         btnSubscribe.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
         btnSubscribe.disabled = true;
 
         if (isSubscribed) {
-            const { error } = await supabase
+            // CORREGIDO: supabase -> supabaseClient
+            const { error } = await supabaseClient
                 .from('subscriptions')
                 .delete()
                 .match({ user_id: session.user.id, camera_id: camId });
@@ -710,7 +713,8 @@ if (btnSubscribe) {
                 return;
             }
 
-            const { error } = await supabase
+            // CORREGIDO: supabase -> supabaseClient
+            const { error } = await supabaseClient
                 .from('subscriptions')
                 .insert({ user_id: session.user.id, camera_id: camId });
 
