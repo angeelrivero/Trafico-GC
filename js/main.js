@@ -212,34 +212,54 @@ const trafficSegments = [
 ];
 
 // ---------------------------------------------------------
-// 2. GENERADOR DE GRID DE CÁMARAS
+// 2. GENERADOR DE GRID (VERSIÓN LIMPIA CON AUTOPLAY)
 // ---------------------------------------------------------
-const container = document.getElementById('cameras-container');
 
-if (container) {
-    camerasData.forEach(cam => {
+document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById('cameras-container');
+    if (container) {
+        loadCamerasSequentially(container);
+    }
+});
+
+// Función de espera
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function loadCamerasSequentially(container) {
+    container.innerHTML = ''; // Limpiamos
+
+    for (const cam of camerasData) {
+        // Lógica de colores de la barra
         let barColor = 'bg-success';
         if (cam.level >= 3) barColor = 'bg-warning';
         if (cam.level >= 7) barColor = 'bg-danger';
         if (cam.level == 10) barColor = 'bg-dark';
 
+        // URL LIMPIA: Sin parámetros raros de privacidad que causan el Error 153
+        // Usamos 'www.youtube.com' estándar.
+        // mute=1 es OBLIGATORIO para que el navegador permita el autoplay.
+        const videoSrc = `https://www.youtube.com/embed/${cam.videoId}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0&loop=1&playlist=${cam.videoId}`;
+
         const html = `
-            <div class="col-12 col-md-6 col-lg-3"> 
+            <div class="col-12 col-md-6 col-lg-3 fade-in-camera"> 
                 <a href="detalle.html?id=${cam.id}" class="camera-card-link">
                     <div class="camera-card h-100"> 
                         <div class="card-header">
                             <span>${cam.name}</span> 
                             <span id="badge-${cam.id}" class="badge ${barColor}">${cam.level}/10</span>
                         </div>
-                        <div class="iframe-container">
+                        
+                        <div class="iframe-container" style="background: #000;">
                             <iframe 
-                                src="https://www.youtube-nocookie.com/embed/${cam.videoId}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0" 
+                                src="${videoSrc}" 
                                 title="Cámara Tráfico"
                                 frameborder="0" 
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                allowfullscreen>
+                                allowfullscreen
+                                style="pointer-events: none;"> 
                             </iframe>
                         </div>
+
                         <div class="traffic-stats text-center">
                             <div class="progress" style="height: 6px; background: #333;">
                                 <div id="bar-${cam.id}" class="progress-bar ${barColor}" role="progressbar" style="width: ${cam.level * 10}%"></div>
@@ -250,12 +270,19 @@ if (container) {
                 </a>
             </div>
         `;
-        container.innerHTML += html;
-    });
+        
+        container.insertAdjacentHTML('beforeend', html);
+        
+        // Esperamos 2 SEGUNDOS entre cámara y cámara.
+        // Si lo bajas, te volverá a salir el mensaje del Bot.
+        await wait(2000); 
+    }
 
+    // Iniciamos datos
     updateDashboardLive();
     setInterval(updateDashboardLive, 15000);
 }
+
 
 // ---------------------------------------------------------
 // NUEVA FUNCIÓN: ACTUALIZAR DASHBOARD EN VIVO
