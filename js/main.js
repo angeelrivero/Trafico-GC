@@ -1,32 +1,33 @@
+
+// 0. CONFIGURACIÓN SUPABASE (CORREGIDO)
 // ---------------------------------------------------------
-// 0. CONFIGURACIÓN SUPABASE (A PRUEBA DE FALLOS)
-// ---------------------------------------------------------
-const SUPABASE_URL = 'https://wfoidmoojjqwcltcpyaf.supabase.co'; 
+const SUPABASE_URL = 'https://wfoidmoojjqwcltcpyaf.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_xzIZVjCgxaTyOwS1lrjHpA_SzEOtaxq';
 
-// 1. Inicializamos la variable
-let supabase = null;
+// CAMBIO 1: Corregido nombre de variable a 'supabase'
+let supabaseClient = null;
 
 // 2. Intentamos cargar el cliente real
 try {
+    // La librería global se llama 'supabase' (window.supabase)
     if (typeof window.supabase !== 'undefined') {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Asignamos el cliente a NUESTRA variable 'supabase'
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     } else {
         console.warn("Supabase no ha llegado a tiempo. Activando modo seguro.");
-    }   
+    }
 } catch (e) {
     console.error("Error inicializando Supabase:", e);
 }
 
-// 3. SI FALLÓ LA CARGA (Race Condition), CREAMOS UN "FALSO" CLIENTE
-// Esto evita que el código se rompa en la línea 20, 50, etc. y permite que el mapa cargue.
-if (!supabase) {
-    supabase = {
+// 3. SI FALLÓ LA CARGA, CREAMOS UN "FALSO" CLIENTE
+if (!supabaseClient) {
+    supabaseClient = {
         auth: {
-            signUp: async () => ({ error: { message: "Error de conexión: Recarga la página" } }),
+            signUp: async () => ({ error: { message: "Error de conexión" } }),
             signInWithPassword: async () => ({ error: { message: "Error de conexión" } }),
             signOut: async () => ({}),
-            onAuthStateChange: () => {}, // No hace nada, pero no explota
+            onAuthStateChange: () => { },
             getSession: async () => ({ data: { session: null } }),
             getUser: async () => ({ data: { user: null } })
         },
@@ -37,7 +38,7 @@ if (!supabase) {
             update: async () => ({ eq: async () => ({ error: null }) })
         }),
         storage: { from: () => ({ download: async () => ({ error: "No cargado" }) }) },
-        channel: () => ({ on: () => ({ subscribe: () => {} }) })
+        channel: () => ({ on: () => ({ subscribe: () => { } }) })
     };
 }
 
@@ -57,7 +58,7 @@ if (document.getElementById('registerForm')) {
             return;
         }
 
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await supabaseClient.auth.signUp({
             email: email,
             password: password,
         });
@@ -69,10 +70,10 @@ if (document.getElementById('registerForm')) {
 
         // --- BLOQUE PARA GUARDAR EL EMAIL ---
         if (data.user) {
-            await supabase.from('profiles').upsert({
+            await supabaseClient.from('profiles').upsert({
                 id: data.user.id,
                 email: email,
-                username: email.split('@')[0], 
+                username: email.split('@')[0],
                 updated_at: new Date()
             });
         }
@@ -99,7 +100,7 @@ if (document.getElementById('loginForm')) {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
 
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
             email: email,
             password: password,
         });
@@ -116,20 +117,20 @@ if (document.getElementById('loginForm')) {
 
 // 3. LOGOUT
 async function logout() {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabaseClient.auth.signOut();
     if (error) console.log('Error logout:', error);
     else alert("Has cerrado sesión");
 }
 
-document.addEventListener('click', function(e){
-    if(e.target && e.target.id == 'logoutBtn'){
+document.addEventListener('click', function (e) {
+    if (e.target && e.target.id == 'logoutBtn') {
         e.preventDefault();
         logout();
     }
 });
 
 // 4. ESCUCHAR CAMBIOS DE ESTADO
-supabase.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange((event, session) => {
     updateUI(session);
 });
 
@@ -141,41 +142,41 @@ function updateUI(session) {
     const chatContent = document.getElementById('chat-content');
 
     if (session) {
-        if(loginBtn) loginBtn.classList.add('d-none');
-        if(userProfile) userProfile.classList.remove('d-none');
-        if(userEmailDisplay) userEmailDisplay.textContent = "Cargando..."; 
-        
-        if(chatLock) chatLock.classList.add('d-none');
-        if(chatContent) chatContent.classList.remove('d-none');
+        if (loginBtn) loginBtn.classList.add('d-none');
+        if (userProfile) userProfile.classList.remove('d-none');
+        if (userEmailDisplay) userEmailDisplay.textContent = "Cargando...";
 
-        getProfile(session); 
+        if (chatLock) chatLock.classList.add('d-none');
+        if (chatContent) chatContent.classList.remove('d-none');
+
+        getProfile(session);
         checkPremiumStatus(session.user.id);
 
     } else {
-        if(loginBtn) loginBtn.classList.remove('d-none');
-        if(userProfile) userProfile.classList.add('d-none');
-        if(chatLock) chatLock.classList.remove('d-none');
-        if(chatContent) chatContent.classList.add('d-none');
+        if (loginBtn) loginBtn.classList.remove('d-none');
+        if (userProfile) userProfile.classList.add('d-none');
+        if (chatLock) chatLock.classList.remove('d-none');
+        if (chatContent) chatContent.classList.add('d-none');
 
-        if(userEmailDisplay) userEmailDisplay.textContent = "Usuario";
-        
+        if (userEmailDisplay) userEmailDisplay.textContent = "Usuario";
+
         // --- AQUÍ RESTAURAMOS LOS ANUNCIOS SI CIERRA SESIÓN ---
         document.querySelectorAll('.ad-banner').forEach(el => el.style.display = 'block');
-        document.querySelectorAll('.ad-label').forEach(el => el.style.display = 'block'); 
-        document.querySelectorAll('.ad-container-detail').forEach(el => el.style.display = 'block'); 
-        
+        document.querySelectorAll('.ad-label').forEach(el => el.style.display = 'block');
+        document.querySelectorAll('.ad-container-detail').forEach(el => el.style.display = 'block');
+
         const navImg = document.querySelector('.nav-avatar');
         if (navImg) {
             navImg.outerHTML = '<i class="fas fa-user-circle"></i>';
         }
-        
+
         const vipBadge = document.getElementById('vip-badge');
-        if(vipBadge) vipBadge.classList.add('d-none');
+        if (vipBadge) vipBadge.classList.add('d-none');
     }
 }
 
 async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     updateUI(session);
 }
 checkSession();
@@ -191,14 +192,14 @@ const camerasData = [
     { id: 3, name: "GC2 Arucas", level: 5, videoId: "z1E5ciDe3a0", tsChannel: "000000", tsField: "1" },
     { id: 4, name: "GC2 Bañaderos", level: 1, videoId: "XGzncIaJJ44", tsChannel: "000000", tsField: "1" },
     { id: 5, name: "Mesa y López", level: 5, videoId: "gfsJIcCZzlI", tsChannel: "000000", tsField: "1" },
-    { 
-        id: 6, 
-        name: "La Ballena", 
-        level: 4, 
-        videoId: "ZVgz2e-wMR4", 
-        tsChannel: "3199441", 
+    {
+        id: 6,
+        name: "La Ballena",
+        level: 4,
+        videoId: "ZVgz2e-wMR4",
+        tsChannel: "3199441",
         tsField: "1",
-        readKey: "Q1XCOL5COQL3D5QB" 
+        readKey: "Q1XCOL5COQL3D5QB"
     },
     { id: 7, name: "Siete Palmas", level: 3, videoId: "eMbMc7VnI5Q", tsChannel: "000000", tsField: "1" },
     { id: 8, name: "Maspalomas Sur", level: 0, videoId: "xrYXDI5uAoA", tsChannel: "000000", tsField: "1" }
@@ -253,7 +254,7 @@ if (container) {
     });
 
     updateDashboardLive();
-    setInterval(updateDashboardLive, 15000); 
+    setInterval(updateDashboardLive, 15000);
 }
 
 // ---------------------------------------------------------
@@ -272,7 +273,7 @@ async function updateDashboardLive() {
             const response = await fetch(url);
             const data = await response.json();
             const val = data[`field${cam.tsField}`];
-            
+
             if (val !== null && val !== undefined) {
                 const level = parseInt(val);
                 const badge = document.getElementById(`badge-${cam.id}`);
@@ -280,10 +281,10 @@ async function updateDashboardLive() {
 
                 if (badge && bar) {
                     badge.innerText = `${level}/10`;
-                    let newColorClass = 'bg-success'; 
-                    if (level >= 3) newColorClass = 'bg-warning'; 
-                    if (level >= 7) newColorClass = 'bg-danger'; 
-                    if (level == 10) newColorClass = 'bg-dark'; 
+                    let newColorClass = 'bg-success';
+                    if (level >= 3) newColorClass = 'bg-warning';
+                    if (level >= 7) newColorClass = 'bg-danger';
+                    if (level == 10) newColorClass = 'bg-dark';
 
                     badge.className = `badge ${newColorClass}`;
                     bar.style.width = `${level * 10}%`;
@@ -299,12 +300,12 @@ async function updateDashboardLive() {
 // ---------------------------------------------------------
 // 3. MAPA GOOGLE (CON TRÁFICO REAL)
 // ---------------------------------------------------------
-window.initMap = function() {
+window.initMap = function () {
     const mapDiv = document.getElementById("googleMap");
-    if(!mapDiv) return;
+    if (!mapDiv) return;
 
     const granCanaria = { lat: 28.05, lng: -15.45 };
-    
+
     // Estilo oscuro (Dark Mode)
     const darkStyle = [
         { elementType: "geometry", stylers: [{ color: "#212121" }] },
@@ -315,7 +316,7 @@ window.initMap = function() {
         { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
         { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2c2c2c" }] },
         { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
-        { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] }, 
+        { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
         { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3d3d3d" }] }
     ];
 
@@ -323,7 +324,7 @@ window.initMap = function() {
         zoom: 11,
         center: granCanaria,
         styles: darkStyle,
-        disableDefaultUI: true 
+        disableDefaultUI: true
     });
 
     // ACTIVAR CAPA DE TRÁFICO REAL
@@ -339,7 +340,8 @@ async function getProfile(session) {
     if (!session) return;
     const { user } = session;
 
-    const { data: currentProfile } = await supabase
+    // CORREGIDO: supabase -> supabaseClient
+    const { data: currentProfile } = await supabaseClient
         .from('profiles')
         .select('email')
         .eq('id', user.id)
@@ -347,31 +349,31 @@ async function getProfile(session) {
 
     if (currentProfile && !currentProfile.email) {
         console.log("Detectado usuario sin email público. Corrigiendo...");
-        await supabase.from('profiles').update({ 
-            email: user.email 
+        await supabaseClient.from('profiles').update({ // CORREGIDO
+            email: user.email
         }).eq('id', user.id);
     }
-    
+
     // AQUI: Añadimos 'telegram_chat_id' a la petición
-    const { data, error } = await supabase
+    // CORREGIDO: supabase -> supabaseClient
+    const { data, error } = await supabaseClient
         .from('profiles')
-        .select(`username, website, avatar_url, telegram_chat_id`) 
+        .select(`username, website, avatar_url, telegram_chat_id`)
         .eq('id', user.id)
         .single();
 
     if (data) {
         const userEmailDisplay = document.getElementById('user-email-display');
-        if(userEmailDisplay) userEmailDisplay.textContent = data.username || user.email.split('@')[0];
+        if (userEmailDisplay) userEmailDisplay.textContent = data.username || user.email.split('@')[0];
 
         const usernameInput = document.getElementById('profileUsername');
         const websiteInput = document.getElementById('profileWebsite');
-        const telegramInput = document.getElementById('profileTelegram'); // Nuevo
+        const telegramInput = document.getElementById('profileTelegram');
 
-        if(usernameInput) usernameInput.value = data.username || '';
-        if(websiteInput) websiteInput.value = data.website || '';
-        // Cargar el Telegram ID si existe
-        if(telegramInput) telegramInput.value = data.telegram_chat_id || '';
-        
+        if (usernameInput) usernameInput.value = data.username || '';
+        if (websiteInput) websiteInput.value = data.website || '';
+        if (telegramInput) telegramInput.value = data.telegram_chat_id || '';
+
         if (data.avatar_url) {
             downloadImage(data.avatar_url);
         } else {
@@ -382,25 +384,27 @@ async function getProfile(session) {
         }
     } else {
         const userEmailDisplay = document.getElementById('user-email-display');
-        if(userEmailDisplay) userEmailDisplay.textContent = user.email.split('@')[0];
+        if (userEmailDisplay) userEmailDisplay.textContent = user.email.split('@')[0];
     }
 }
 
+
+
 async function downloadImage(path) {
     try {
-        const { data, error } = await supabase.storage.from('avatars').download(path);
+        const { data, error } = await supabaseClient.storage.from('avatars').download(path);
         if (error) throw error;
-        
+
         const url = URL.createObjectURL(data);
         const avatarPreview = document.getElementById('avatarPreview');
-        if(avatarPreview) avatarPreview.src = url; 
-        
+        if (avatarPreview) avatarPreview.src = url;
+
         const navIcon = document.querySelector('#nav-user-profile i.fa-user-circle');
-        if(navIcon) {
+        if (navIcon) {
             navIcon.outerHTML = `<img src="${url}" class="nav-avatar">`;
         } else {
             const navImg = document.querySelector('.nav-avatar');
-            if(navImg) navImg.src = url;
+            if (navImg) navImg.src = url;
         }
     } catch (error) {
         console.log('Error descargando imagen: ', error.message);
@@ -411,30 +415,30 @@ async function downloadImage(path) {
 if (document.getElementById('profileForm')) {
     document.getElementById('profileForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const saveBtn = document.getElementById('saveProfileBtn');
         const spinner = document.getElementById('saveSpinner');
-        
+
         saveBtn.disabled = true;
         spinner.classList.remove('d-none');
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if(!user) throw new Error("No hay usuario logueado");
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) throw new Error("No hay usuario logueado");
 
             const username = document.getElementById('profileUsername').value;
             const website = document.getElementById('profileWebsite').value;
             // Capturar el valor de Telegram
             const telegram_chat_id = document.getElementById('profileTelegram').value;
-            
+
             const avatarFile = document.getElementById('avatarFile').files[0];
-            
+
             let avatar_url = null;
 
             if (avatarFile) {
                 const fileExt = avatarFile.name.split('.').pop();
                 const fileName = `${user.id}/${Math.random()}.${fileExt}`;
-                const { error: uploadError } = await supabase.storage
+                const { error: uploadError } = await supabaseClient.storage
                     .from('avatars')
                     .upload(fileName, avatarFile, { upsert: true });
 
@@ -447,7 +451,7 @@ if (document.getElementById('profileForm')) {
                 username,
                 website,
                 // Guardar Telegram (o null si está vacío)
-                telegram_chat_id: telegram_chat_id || null, 
+                telegram_chat_id: telegram_chat_id || null,
                 updated_at: new Date(),
             };
 
@@ -455,14 +459,14 @@ if (document.getElementById('profileForm')) {
                 updates.avatar_url = avatar_url;
             }
 
-            let { error } = await supabase.from('profiles').upsert(updates);
+            let { error } = await supabaseClient.from('profiles').upsert(updates);
             if (error) throw error;
 
             alert('¡Perfil actualizado!');
-            
-            const { data: { session } } = await supabase.auth.getSession();
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
             getProfile(session);
-            
+
             const modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
             modal.hide();
 
@@ -498,17 +502,17 @@ if (chatContainer) {
     function renderMessage(msg) {
         const profile = msg.profiles || {};
         const username = profile.username || 'Usuario Anónimo';
-        let avatarImg = '<i class="fas fa-user-circle fa-lg me-2"></i>'; 
+        let avatarImg = '<i class="fas fa-user-circle fa-lg me-2"></i>';
         if (profile.avatar_url) {
             avatarImg = `<img src="${STORAGE_URL}${profile.avatar_url}" class="chat-avatar" alt="User">`;
         }
-        
-        const time = new Date(msg.created_at).toLocaleString('es-ES', { 
-            day: '2-digit', 
+
+        const time = new Date(msg.created_at).toLocaleString('es-ES', {
+            day: '2-digit',
             month: '2-digit',
             year: '2-digit',
-            hour: '2-digit', 
-            minute: '2-digit' 
+            hour: '2-digit',
+            minute: '2-digit'
         });
 
         const html = `
@@ -526,24 +530,26 @@ if (chatContainer) {
     }
 
     async function loadChat() {
-        chatContainer.innerHTML = '<div class="text-center text-muted mt-5"><i class="fas fa-spinner fa-spin"></i> Cargando chat...</div>';
-        const { data, error } = await supabase
-            .from('messages')
-            .select(`id, content, created_at, user_id, profiles ( username, avatar_url )`)
-            .order('created_at', { ascending: true })
-            .limit(50);
+    chatContainer.innerHTML = '<div class="text-center text-muted mt-5"><i class="fas fa-spinner fa-spin"></i> Cargando chat...</div>';
+    
+    // CORREGIDO: supabase -> supabaseClient
+    const { data, error } = await supabaseClient
+        .from('messages')
+        .select(`id, content, created_at, user_id, profiles ( username, avatar_url )`)
+        .order('created_at', { ascending: true })
+        .limit(50);
 
-        chatContainer.innerHTML = ''; 
-        if (error) {
-            chatContainer.innerHTML = '<p class="text-danger text-center">Error cargando chat</p>';
-            return;
-        }
-        data.forEach(msg => renderMessage(msg));
+    chatContainer.innerHTML = '';
+    if (error) {
+        chatContainer.innerHTML = '<p class="text-danger text-center">Error cargando chat</p>';
+        return;
     }
+    data.forEach(msg => renderMessage(msg));
+}
 
-    const chatChannel = supabase.channel('public:messages')
+    const chatChannel = supabaseClient.channel('public:messages')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
-            const { data: profileData } = await supabase.from('profiles').select('username, avatar_url').eq('id', payload.new.user_id).single();
+            const { data: profileData } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', payload.new.user_id).single();
             const fullMessage = { ...payload.new, profiles: profileData };
             renderMessage(fullMessage);
         })
@@ -552,13 +558,13 @@ if (chatContainer) {
     async function sendMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) {
             alert("Debes iniciar sesión para escribir.");
             return;
         }
         chatInput.value = '';
-        const { error } = await supabase.from('messages').insert({ content: text, user_id: user.id });
+        const { error } = await supabaseClient.from('messages').insert({ content: text, user_id: user.id });
         if (error) alert("Error enviando: " + error.message);
     }
 
@@ -581,7 +587,8 @@ let currentSubscriptions = [];
 // Verificar si el usuario es Premium
 async function checkPremiumStatus(userId) {
     try {
-        const { data, error } = await supabase
+        // CORREGIDO: supabase -> supabaseClient
+        const { data, error } = await supabaseClient
             .from('profiles')
             .select('is_premium')
             .eq('id', userId)
@@ -594,13 +601,13 @@ async function checkPremiumStatus(userId) {
 
         if (data && data.is_premium) {
             isUserPremium = true;
-            
+
             document.querySelectorAll('.ad-banner').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.ad-label').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.ad-container-detail').forEach(el => el.style.display = 'none');
 
             const vipBadge = document.getElementById('vip-badge');
-            if(vipBadge) vipBadge.classList.remove('d-none');
+            if (vipBadge) vipBadge.classList.remove('d-none');
         }
     } catch (err) {
         console.error("Error inesperado en VIP:", err);
@@ -610,10 +617,10 @@ async function checkPremiumStatus(userId) {
 const btnSubscribe = document.getElementById('btnSubscribe');
 
 if (btnSubscribe) {
-    
+
     async function initSubscribeButton() {
-        const { data: { session } } = await supabase.auth.getSession();
-        
+        const { data: { session } } = await supabaseClient.auth.getSession();
+
         if (!session) {
             btnSubscribe.innerHTML = '<i class="fas fa-lock"></i> Inicia sesión para alertar';
             btnSubscribe.disabled = true;
@@ -659,15 +666,15 @@ if (btnSubscribe) {
 
         if (isSubscribed) {
             btnSubscribe.innerHTML = '<i class="fas fa-bell-slash"></i> Desactivar Alerta';
-            btnSubscribe.className = 'btn btn-danger text-white'; 
+            btnSubscribe.className = 'btn btn-danger text-white';
         } else {
             btnSubscribe.innerHTML = '<i class="fas fa-bell"></i> Activar Alerta (> Nvl 7)';
-            btnSubscribe.className = 'btn btn-success text-white'; 
+            btnSubscribe.className = 'btn btn-success text-white';
         }
     }
 
     btnSubscribe.addEventListener('click', async () => {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
         if (!session) return;
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -693,7 +700,7 @@ if (btnSubscribe) {
         } else {
             if (!isUserPremium && currentSubscriptions.length >= 2) {
                 const modalEl = document.getElementById('vipModal');
-                if(modalEl) {
+                if (modalEl) {
                     const modal = new bootstrap.Modal(modalEl);
                     modal.show();
                 } else {
@@ -731,11 +738,11 @@ if (document.getElementById('paypal-button-container')) {
             paypal.Buttons({
                 style: {
                     layout: 'vertical',
-                    color:  'gold',
-                    shape:  'rect',
-                    label:  'paypal'
+                    color: 'gold',
+                    shape: 'rect',
+                    label: 'paypal'
                 },
-                createOrder: function(data, actions) {
+                createOrder: function (data, actions) {
                     return actions.order.create({
                         purchase_units: [{
                             description: "Suscripción GrancaCam VIP",
@@ -743,17 +750,17 @@ if (document.getElementById('paypal-button-container')) {
                         }]
                     });
                 },
-                onApprove: function(data, actions) {
-                    return actions.order.capture().then(async function(details) {
+                onApprove: function (data, actions) {
+                    return actions.order.capture().then(async function (details) {
                         alert('¡Pago completado por ' + details.payer.name.given_name + '! Activando VIP...');
-                        const { data: { user } } = await supabase.auth.getUser();
+                        const { data: { user } } = await supabaseClient.auth.getUser();
                         const { error } = await supabase
                             .from('profiles')
                             .update({ is_premium: true })
                             .eq('id', user.id);
 
                         if (!error) {
-                            location.reload(); 
+                            location.reload();
                         } else {
                             alert("Hubo un error activando tu cuenta, contáctanos.");
                         }
